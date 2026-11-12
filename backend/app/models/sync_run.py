@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Text, func
+from sqlalchemy import DateTime, Index, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.enums import SyncStatus, SyncTrigger
@@ -11,6 +11,15 @@ class SyncRun(Base):
     """Her senkronizasyon çalışmasının kaydı. RUNNING kaydı aynı anda ikinci sync'i engeller."""
 
     __tablename__ = "sync_runs"
+    __table_args__ = (
+        # Aynı anda en fazla bir RUNNING kaydı olabilir: eşzamanlı sync'e DB seviyesinde kilit.
+        Index(
+            "uq_sync_runs_single_running",
+            "status",
+            unique=True,
+            postgresql_where=text("status = 'running'"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     trigger: Mapped[SyncTrigger] = mapped_column(str_enum(SyncTrigger))
