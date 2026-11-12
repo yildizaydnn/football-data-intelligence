@@ -13,6 +13,7 @@ cp .env.example .env      # API_FOOTBALL_KEY değerini doldur
 make install              # backend bağımlılıkları
 make db-up                # PostgreSQL (localhost:5433)
 make migrate              # tabloları oluştur
+make sync                 # API-Football'dan ilk veri yükleme (3 istek)
 make dev                  # http://localhost:8000/docs
 ```
 

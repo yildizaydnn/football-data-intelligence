@@ -1,4 +1,4 @@
-.PHONY: help install db-up db-down dev migrate migration lint format test
+.PHONY: help install db-up db-down dev migrate migration sync lint format test
 
 BACKEND := cd backend &&
 
@@ -22,6 +22,9 @@ migrate: ## Migration'ları uygula (alembic upgrade head)
 
 migration: ## Yeni migration üret: make migration m="açıklama"
 	$(BACKEND) uv run alembic revision --autogenerate -m "$(m)"
+
+sync: ## API-Football'dan tam veri yükle (3 istek)
+	$(BACKEND) uv run python -m scripts.initial_sync
 
 lint: ## Ruff ile lint + format kontrolü
 	$(BACKEND) uv run ruff check . && uv run ruff format --check .

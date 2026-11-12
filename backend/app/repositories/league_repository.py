@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from sqlalchemy import select
 
-from app.models import League, Season
+from app.models import Fixture, League, Season
 from app.repositories.base import BaseRepository
 
 
@@ -20,3 +20,8 @@ class SeasonRepository(BaseRepository[Season]):
 
     def list_by_league(self, league_id: int) -> list[Season]:
         return self.list(Season.league_id == league_id, order_by=[Season.year.desc()])
+
+    def list_with_fixtures(self, league_id: int) -> list[Season]:
+        """En az bir maçı yüklenmiş sezonlar (yeniden eskiye)."""
+        has_fixtures = select(Fixture.id).where(Fixture.season_id == Season.id).exists()
+        return self.list(Season.league_id == league_id, has_fixtures, order_by=[Season.year.desc()])

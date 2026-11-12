@@ -21,7 +21,7 @@ def _settings(daily_limit: int) -> Settings:
 
 def test_no_request_is_made_when_budget_is_insufficient(db_session: Session) -> None:
     provider = FakeProvider()
-    service = SyncService(db_session, provider, _settings(daily_limit=2))  # ilk sync 3 ister
+    service = SyncService(db_session, _settings(daily_limit=2), provider)  # ilk sync 3 ister
 
     with pytest.raises(QuotaExceededError, match="3 istek gerekiyor, 2 kaldı"):
         service.run(SyncTrigger.MANUAL)
@@ -35,7 +35,7 @@ def test_budget_accounts_for_requests_already_used_today(db_session: Session) ->
     provider = FakeProvider()
 
     with pytest.raises(QuotaExceededError):
-        SyncService(db_session, provider, _settings(100)).run(SyncTrigger.MANUAL)
+        SyncService(db_session, _settings(100), provider).run(SyncTrigger.MANUAL)
 
     assert provider.calls == []
 
@@ -46,14 +46,14 @@ def test_budget_respects_lower_remaining_reported_by_api(db_session: Session) ->
     provider = FakeProvider()
 
     with pytest.raises(QuotaExceededError):
-        SyncService(db_session, provider, _settings(100)).run(SyncTrigger.MANUAL)
+        SyncService(db_session, _settings(100), provider).run(SyncTrigger.MANUAL)
 
     assert provider.calls == []
 
 
 def test_incremental_sync_fits_into_small_budget(db_session: Session) -> None:
     provider = FakeProvider()
-    service = SyncService(db_session, provider, _settings(daily_limit=4))
+    service = SyncService(db_session, _settings(daily_limit=4), provider)
     service.run(SyncTrigger.INITIAL)  # 3 istek → 1 hak kaldı
     provider.calls.clear()
 

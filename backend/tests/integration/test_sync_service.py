@@ -24,7 +24,7 @@ def provider() -> FakeProvider:
 
 @pytest.fixture
 def service(db_session: Session, provider: FakeProvider) -> SyncService:
-    return SyncService(db_session, provider, SETTINGS)
+    return SyncService(db_session, SETTINGS, provider)
 
 
 def test_first_sync_loads_data_and_records_run_and_usage(service: SyncService) -> None:

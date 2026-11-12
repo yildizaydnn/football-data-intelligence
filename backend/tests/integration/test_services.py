@@ -25,7 +25,7 @@ SETTINGS = Settings(_env_file=None, default_league_id=203, default_season=2024)
 @pytest.fixture
 def league(db_session: Session) -> League:
     """Örnek veriyi gerçek sync akışıyla yükler (FakeProvider üzerinden)."""
-    SyncService(db_session, FakeProvider(), SETTINGS).run(SyncTrigger.INITIAL)
+    SyncService(db_session, SETTINGS, FakeProvider()).run(SyncTrigger.INITIAL)
     return LeagueRepository(db_session).get_by_external_id(203)
 
 
@@ -47,6 +47,25 @@ class TestLeagueService:
     def test_resolves_current_season_by_default(self, league: League, leagues: LeagueService):
         assert leagues.resolve_season(league.id).year == 2024
         assert leagues.resolve_season(league.id, 2023).year == 2023
+
+    def test_lists_only_seasons_with_data(self, league: League, leagues: LeagueService):
+        # API 2023'ü de bildiriyor ama yalnızca 2024 sync edildi
+        assert [s.year for s in leagues.list_seasons(league.id)] == [2024]
+
+    def test_current_season_without_data_falls_back_to_latest_with_data(
+        self, db_session: Session, leagues: LeagueService
+    ) -> None:
+        # Gerçek durum: API güncel sezonu 2026 bildiriyor, ücretsiz plan sadece 2024'ü veriyor.
+        provider = FakeProvider()
+        provider.leagues[0]["seasons"] = [
+            {"year": 2024, "start": "2024-08-09", "end": "2025-06-01", "current": False},
+            {"year": 2026, "start": "2026-08-14", "end": "2027-05-23", "current": True},
+        ]
+        SyncService(db_session, SETTINGS, provider).run(SyncTrigger.INITIAL)
+        league_id = LeagueRepository(db_session).get_by_external_id(203).id
+
+        assert leagues.resolve_season(league_id).year == 2024
+        assert leagues.resolve_season(league_id, 2026).year == 2026  # açıkça istenirse yine döner
 
     def test_unknown_league_or_season_raises_not_found(self, league: League, leagues):
         with pytest.raises(NotFoundError):

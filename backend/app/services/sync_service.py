@@ -40,7 +40,10 @@ class SyncService:
     """Sync iş akışının sahibi: kota kontrolü, kilit, pipeline, kayıt ve transaction sınırları."""
 
     def __init__(
-        self, session: Session, provider: FootballDataProvider, settings: Settings
+        self,
+        session: Session,
+        settings: Settings,
+        provider: FootballDataProvider | None = None,
     ) -> None:
         self.session = session
         self.provider = provider
@@ -67,6 +70,8 @@ class SyncService:
         Başlamadan önce reddedilirse hata fırlatır (kota yetersiz, başka sync çalışıyor).
         Başladıktan sonraki hatalar fırlatılmaz; FAILED olarak kaydedilip run döner.
         """
+        if self.provider is None:
+            raise RuntimeError("SyncService.run için provider gerekli")
         league_external_id = league_external_id or self.settings.default_league_id
         season = season or self.settings.default_season
         pipeline = SyncPipeline(self.provider, self.repos)
