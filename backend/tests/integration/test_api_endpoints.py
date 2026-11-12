@@ -192,3 +192,32 @@ def test_openapi_has_readable_operation_ids(client: TestClient) -> None:
 
     assert paths["/api/v1/leagues/{league_id}/standings"]["get"]["operationId"] == "get_standings"
     assert paths["/api/v1/sync"]["post"]["operationId"] == "trigger_sync"
+
+
+class TestSyncToken:
+    @pytest.fixture
+    def protected(self, client: TestClient) -> TestClient:
+        client.app.dependency_overrides[get_settings] = lambda: Settings(
+            _env_file=None, default_league_id=203, default_season=2024, sync_api_token="s3cret"
+        )
+        return client
+
+    def test_missing_token_is_rejected(self, protected: TestClient, provider: FakeProvider):
+        response = protected.post("/api/v1/sync")
+
+        assert response.status_code == 401
+        assert response.json()["error"]["code"] == "unauthorized"
+        assert provider.calls == []
+
+    def test_wrong_token_is_rejected(self, protected: TestClient) -> None:
+        response = protected.post("/api/v1/sync", headers={"X-Sync-Token": "nope"})
+
+        assert response.status_code == 401
+
+    def test_valid_token_is_accepted(self, protected: TestClient) -> None:
+        response = protected.post("/api/v1/sync", headers={"X-Sync-Token": "s3cret"})
+
+        assert response.status_code == 200
+
+    def test_read_endpoints_stay_public(self, protected: TestClient) -> None:
+        assert protected.get("/api/v1/sync/usage").status_code == 200

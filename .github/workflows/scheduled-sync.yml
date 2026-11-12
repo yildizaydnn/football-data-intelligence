@@ -1,0 +1,38 @@
+# Yedek zamanlayıcı: ücretsiz barındırmada (ör. Render) uygulama boştayken uyur ve
+# içindeki APScheduler çalışmaz. Bu workflow günde bir kez POST /sync çağırır;
+# istek uygulamayı da uyandırır. Uygulama zaten senkronize ettiyse DB kilidi ve kota
+# kontrolü fazladan istek atılmasını engeller.
+#
+# Gerekli repository secret'ları:
+#   BACKEND_URL     ör. https://football-api.onrender.com
+#   SYNC_API_TOKEN  backend'deki SYNC_API_TOKEN ile aynı değer
+name: Scheduled sync
+
+on:
+  schedule:
+    - cron: "30 4 * * *" # UTC; uygulama içi scheduler'dan (04:00) sonra
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: ${{ vars.SCHEDULED_SYNC_ENABLED == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Trigger sync
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          SYNC_API_TOKEN: ${{ secrets.SYNC_API_TOKEN }}
+        run: |
+          # Uyuyan instance'ın açılması ~1 dk sürebilir: uzun timeout + retry.
+          status=$(curl -sS -o response.json -w "%{http_code}" \
+            --max-time 180 --retry 3 --retry-delay 20 --retry-all-errors \
+            -X POST "$BACKEND_URL/api/v1/sync" \
+            -H "Content-Type: application/json" \
+            -H "X-Sync-Token: $SYNC_API_TOKEN" \
+            -d '{"full": false}')
+          cat response.json; echo
+          case "$status" in
+            200) echo "Sync tamamlandı" ;;
+            409|429) echo "::warning::Sync atlandı (HTTP $status)" ;;
+            *) echo "::error::Sync başarısız (HTTP $status)"; exit 1 ;;
+          esac

@@ -44,3 +44,8 @@ class ConflictError(AppError):
 
 class SyncInProgressError(ConflictError):
     code = "sync_in_progress"
+
+
+class UnauthorizedError(AppError):
+    status_code = 401
+    code = "unauthorized"

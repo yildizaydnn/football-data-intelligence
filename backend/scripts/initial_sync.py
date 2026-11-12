@@ -14,8 +14,7 @@ from app.core.database import SessionLocal
 from app.core.enums import SyncStatus, SyncTrigger
 from app.core.exceptions import AppError
 from app.core.logging import setup_logging
-from app.providers.api_football.client import ApiFootballClient
-from app.providers.api_football.provider import ApiFootballProvider
+from app.providers.api_football.provider import build_api_football_provider
 from app.services.sync_service import SyncService
 
 
@@ -34,16 +33,8 @@ def main() -> int:
         print("API_FOOTBALL_KEY tanımlı değil (.env)", file=sys.stderr)
         return 2
 
-    with (
-        ApiFootballClient(
-            settings.api_football_base_url,
-            settings.api_football_key,
-            timeout=settings.api_football_timeout_seconds,
-            max_attempts=settings.api_football_max_attempts,
-        ) as client,
-        SessionLocal() as session,
-    ):
-        service = SyncService(session, settings, ApiFootballProvider(client))
+    with build_api_football_provider(settings) as provider, SessionLocal() as session:
+        service = SyncService(session, settings, provider)
         try:
             run = service.run(
                 SyncTrigger.INITIAL if not args.fixtures_only else SyncTrigger.MANUAL,

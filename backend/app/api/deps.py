@@ -4,16 +4,17 @@ Servisler FootballDataProvider arayüzüne bağımlıdır; ApiFootballProvider'�
 Testler get_session / get_provider / get_settings'i override ederek sahte bağımlılık verir.
 """
 
+import secrets
 from collections.abc import Iterator
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Header
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_session
-from app.providers.api_football.client import ApiFootballClient
-from app.providers.api_football.provider import ApiFootballProvider
+from app.core.exceptions import UnauthorizedError
+from app.providers.api_football.provider import build_api_football_provider
 from app.providers.base import FootballDataProvider
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
@@ -31,16 +32,20 @@ SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 def get_provider(settings: SettingsDep) -> Iterator[FootballDataProvider]:
-    with ApiFootballClient(
-        settings.api_football_base_url,
-        settings.api_football_key,
-        timeout=settings.api_football_timeout_seconds,
-        max_attempts=settings.api_football_max_attempts,
-    ) as client:
-        yield ApiFootballProvider(client)
+    with build_api_football_provider(settings) as provider:
+        yield provider
 
 
 ProviderDep = Annotated[FootballDataProvider, Depends(get_provider)]
+
+
+def require_sync_token(
+    settings: SettingsDep, x_sync_token: Annotated[str | None, Header()] = None
+) -> None:
+    """SYNC_API_TOKEN tanımlıysa sync tetikleme yetkisi ister; boşsa (yerel geliştirme) açık."""
+    expected = settings.sync_api_token
+    if expected and not secrets.compare_digest(x_sync_token or "", expected):
+        raise UnauthorizedError("Geçersiz veya eksik X-Sync-Token")
 
 
 def get_league_service(session: SessionDep) -> LeagueService:

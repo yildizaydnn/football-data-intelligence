@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from app.api.deps import SyncServiceDep, SyncStatusServiceDep
+from app.api.deps import SyncServiceDep, SyncStatusServiceDep, require_sync_token
 from app.api.v1.common import error_responses
 from app.core.enums import SyncTrigger
 from app.schemas.sync import SyncRequest, SyncRunOut, SyncStateOut, SyncUsageOut
@@ -8,7 +8,12 @@ from app.schemas.sync import SyncRequest, SyncRunOut, SyncStateOut, SyncUsageOut
 router = APIRouter(prefix="/sync", tags=["sync"])
 
 
-@router.post("", response_model=SyncRunOut, responses=error_responses(409, 429))
+@router.post(
+    "",
+    response_model=SyncRunOut,
+    responses=error_responses(401, 409, 429),
+    dependencies=[Depends(require_sync_token)],
+)
 def trigger_sync(service: SyncServiceDep, body: SyncRequest | None = None) -> SyncRunOut:
     """Elle senkronizasyon. Kota yetmezse 429, başka sync çalışıyorsa 409 döner.
 

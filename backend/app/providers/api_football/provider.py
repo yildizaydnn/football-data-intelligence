@@ -1,8 +1,11 @@
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from app.core.config import Settings
 from app.core.exceptions import ProviderError
 from app.providers.api_football.client import ApiFootballClient, ApiResult
 from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO
@@ -51,3 +54,15 @@ def _to_response[T: BaseModel](result: ApiResult, dto: type[T]) -> ProviderRespo
             requests_made=result.requests_made,
         ) from exc
     return ProviderResponse(data, result.requests_remaining, result.requests_made)
+
+
+@contextmanager
+def build_api_football_provider(settings: Settings) -> Iterator[ApiFootballProvider]:
+    """Ayarlardan provider kurar; çıkışta HTTP bağlantılarını kapatır."""
+    with ApiFootballClient(
+        settings.api_football_base_url,
+        settings.api_football_key,
+        timeout=settings.api_football_timeout_seconds,
+        max_attempts=settings.api_football_max_attempts,
+    ) as client:
+        yield ApiFootballProvider(client)

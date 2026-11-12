@@ -9,12 +9,15 @@ from app.api.error_handlers import register_error_handlers
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.scheduler.setup import start_scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # Scheduler ileride burada başlatılıp durdurulacak.
+    scheduler = start_scheduler(get_settings())
     yield
+    if scheduler is not None:
+        scheduler.shutdown(wait=False)
 
 
 def _operation_id(route: APIRoute) -> str:

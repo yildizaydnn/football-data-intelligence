@@ -27,6 +27,9 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
     scheduler_enabled: bool = False
+    sync_cron: str = "0 4 * * *"  # UTC; günde bir kez maçları güncelle (1 istek)
+    # Doluysa POST /sync bu değeri X-Sync-Token header'ında ister (dış cron, prod ortamı).
+    sync_api_token: str = ""
     sync_stale_after_minutes: int = 30  # bu süreden uzun RUNNING kalan sync çökmüş sayılır
 
 
