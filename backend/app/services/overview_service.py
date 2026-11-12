@@ -58,5 +58,5 @@ class OverviewService:
                 season.id, now or datetime.now(UTC), UPCOMING_MATCHES
             ),
             live=[f for f in all_fixtures if f.status is MatchStatus.LIVE],
-            last_sync=self.sync_runs.latest(),
+            last_sync=self.sync_runs.latest_data_update(),
         )

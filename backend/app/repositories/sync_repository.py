@@ -45,6 +45,16 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         stmt = select(SyncRun).order_by(SyncRun.started_at.desc(), SyncRun.id.desc()).limit(1)
         return self.session.scalar(stmt)
 
+    def latest_data_update(self) -> SyncRun | None:
+        """Veriyi gerçekten yazan son sync (başarılı/kısmi); atlanan/başarısız sayılmaz."""
+        stmt = (
+            select(SyncRun)
+            .where(SyncRun.status.in_((SyncStatus.SUCCESS, SyncStatus.PARTIAL)))
+            .order_by(SyncRun.started_at.desc(), SyncRun.id.desc())
+            .limit(1)
+        )
+        return self.session.scalar(stmt)
+
     def list_recent(self, limit: int = 10) -> list[SyncRun]:
         return self.list(order_by=[SyncRun.started_at.desc(), SyncRun.id.desc()], limit=limit)
 

@@ -1,5 +1,10 @@
-import { ComingSoon } from "@/shared/components/coming-soon";
+import { OverviewSkeleton, OverviewView } from "@/features/overview/overview-view";
+import { QueryBoundary } from "@/shared/components/query-boundary";
 
 export default function OverviewPage() {
-  return <ComingSoon title="Genel Görünüm" />;
+  return (
+    <QueryBoundary fallback={<OverviewSkeleton />}>
+      <OverviewView />
+    </QueryBoundary>
+  );
 }

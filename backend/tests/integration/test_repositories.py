@@ -120,3 +120,15 @@ class TestQueries:
         repo.upsert([{"league_id": seed.league.id, "year": 2025, "is_current": True}])
 
         assert [s.year for s in repo.list_by_league(seed.league.id)] == [2025, 2024]
+
+
+def test_latest_data_update_ignores_skipped_and_failed(db_session: Session) -> None:
+    repo = SyncRunRepository(db_session)
+    good = repo.try_start(SyncTrigger.MANUAL)
+    repo.finish(good, SyncStatus.SUCCESS)
+    bad = repo.try_start(SyncTrigger.MANUAL)
+    repo.finish(bad, SyncStatus.FAILED, error_message="boom")
+    repo.record_skipped(SyncTrigger.SCHEDULED, "gerek yok")
+
+    assert repo.latest().status is SyncStatus.SKIPPED
+    assert repo.latest_data_update() == good
