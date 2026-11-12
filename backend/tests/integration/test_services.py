@@ -11,6 +11,7 @@ from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
 from app.repositories.sync_repository import SyncRunRepository
 from app.repositories.team_repository import TeamRepository
+from app.rules.engine import get_rule_engine
 from app.services.fixture_service import FixtureFilters, FixtureService
 from app.services.league_service import LeagueService
 from app.services.overview_service import OverviewService
@@ -36,7 +37,9 @@ def leagues(db_session: Session) -> LeagueService:
 
 @pytest.fixture
 def standings(db_session: Session, leagues: LeagueService) -> StandingsService:
-    return StandingsService(FixtureRepository(db_session), TeamRepository(db_session), leagues)
+    return StandingsService(
+        FixtureRepository(db_session), TeamRepository(db_session), leagues, get_rule_engine()
+    )
 
 
 def _team_id(db_session: Session, external_id: int) -> int:
@@ -94,7 +97,9 @@ class TestStandingsService:
 class TestTeamStatsService:
     @pytest.fixture
     def service(self, db_session: Session, leagues: LeagueService) -> TeamStatsService:
-        return TeamStatsService(FixtureRepository(db_session), TeamRepository(db_session), leagues)
+        return TeamStatsService(
+            FixtureRepository(db_session), TeamRepository(db_session), leagues, get_rule_engine()
+        )
 
     def test_team_stats(self, league: League, db_session: Session, service: TeamStatsService):
         fb_id = _team_id(db_session, 611)

@@ -14,18 +14,25 @@ _NO_SCORE_STATUSES = {MatchStatus.SCHEDULED, MatchStatus.POSTPONED, MatchStatus.
 class FixtureTransformer(BaseTransformer[FixtureDTO, dict[str, Any]]):
     """FixtureDTO → fixtures tablosu satırı.
 
-    Takım FK'larını çözebilmek için sezonun iç id'si ve takım external_id → id eşlemesi verilir.
+    Takım FK'larını çözebilmek için sezonun iç id'si ve takım external_id → id eşlemesi,
+    durum kodlarını yorumlamak için ligin kural spec'indeki eşleme tablosu verilir.
     """
 
-    def __init__(self, season_id: int, team_ids: Mapping[int, int]) -> None:
+    def __init__(
+        self,
+        season_id: int,
+        team_ids: Mapping[int, int],
+        status_map: Mapping[str, MatchStatus],
+    ) -> None:
         self.season_id = season_id
         self.team_ids = team_ids
+        self.status_map = status_map
 
     def transform(self, item: FixtureDTO) -> dict[str, Any]:
         external_id = require(item.fixture.id, "fixture.id")
         status_raw = require(item.fixture.status.short, "fixture.status.short").strip().upper()
         try:
-            status = map_status(status_raw)
+            status = map_status(status_raw, self.status_map)
         except UnknownStatusError as exc:
             raise TransformError(str(exc)) from exc
 

@@ -5,6 +5,7 @@ from app.core.exceptions import NotFoundError
 from app.models import Season, Team
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.team_repository import TeamRepository
+from app.rules.engine import RuleEngine
 from app.services.league_service import LeagueService
 
 
@@ -18,11 +19,16 @@ class TeamStats:
 
 class TeamStatsService:
     def __init__(
-        self, fixtures: FixtureRepository, teams: TeamRepository, leagues: LeagueService
+        self,
+        fixtures: FixtureRepository,
+        teams: TeamRepository,
+        leagues: LeagueService,
+        rules: RuleEngine,
     ) -> None:
         self.fixtures = fixtures
         self.teams = teams
         self.leagues = leagues
+        self.rules = rules
 
     def list_teams(self, league_id: int, season_year: int | None = None) -> list[Team]:
         season = self.leagues.resolve_season(league_id, season_year)
@@ -40,7 +46,9 @@ class TeamStatsService:
         season = self.leagues.resolve_season(league_id, season_year)
         team = self.get_team(team_id)
         matches = self.fixtures.list_finished(season.id, team_id=team_id)
-        performance = calculate_team_performance(team_id, matches)
+        league = self.leagues.get_league(league_id)
+        points = self.rules.resolve(league.external_id, season.year).points_table
+        performance = calculate_team_performance(team_id, matches, points)
 
         opponent_ids = {p.opponent_id for p in performance.timeline}
         opponents = {t.id: t for t in self.teams.list_by_ids(opponent_ids)}

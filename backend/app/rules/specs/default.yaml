@@ -1,0 +1,46 @@
+# Tüm liglerin temel kuralları. Lig ve sezon dosyaları yalnızca farkları yazar.
+# Birleştirme: default ← leagues/<lig>.yaml ← o dosyadaki seasons.<yıl>
+meta:
+  name: Varsayılan kurallar
+  sources:
+    - https://www.api-football.com/documentation-v3 (fixture status kodları)
+  verified: true
+  notes: Spec'i olmayan bir lig bu kurallarla hesaplanır.
+
+standings:
+  points: { win: 3, draw: 1, loss: 0 }
+  # Kriterler app/analytics/tiebreakers.py içindeki kayıt defterinden seçilir.
+  tiebreakers: [points, goal_difference, goals_for, wins]
+  head_to_head:
+    requires_all_matches: true # karşılıklı maçların hepsi oynanmadan h2h uygulanmaz
+    matches_per_pair: 2 # çift devreli lig
+    reapply_to_subgroups: false
+  # API-Football normal sezon haftalarını "Regular Season - N" diye adlandırır; play-off,
+  # küme düşme maçı gibi ek haftalar puan tablosuna girmez.
+  include_rounds: "^Regular Season"
+  deductions: {} # takım API id'si → silinen puan
+
+cleaning:
+  # Sağlayıcı durum kodu → bizim durumumuz. Listede olmayan kod gelirse maç atlanır.
+  status_map:
+    TBD: scheduled # saat belirlenmedi
+    NS: scheduled
+    1H: live
+    HT: live
+    2H: live
+    ET: live
+    BT: live # uzatma öncesi ara
+    P: live # penaltılar
+    SUSP: live # kısa süreli durdurma
+    INT: live # kesinti
+    LIVE: live
+    FT: finished
+    AET: finished
+    PEN: finished
+    AWD: finished # hükmen sonuç; skor kesin
+    WO: finished # rakip çıkmadı
+    PST: postponed
+    CANC: cancelled
+    ABD: cancelled # yarıda kaldı
+
+zones: []

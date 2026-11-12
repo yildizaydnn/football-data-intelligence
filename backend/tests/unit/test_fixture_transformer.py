@@ -8,6 +8,7 @@ from app.core.enums import MatchStatus
 from app.etl.transformers.fixture_transformer import FixtureTransformer
 from app.providers.api_football.dto import FixtureDTO
 from tests.conftest import load_json
+from tests.rules_helpers import status_map
 
 SEASON_ID = 7
 # external_id → iç id
@@ -21,7 +22,7 @@ def raw_fixtures() -> list[dict[str, Any]]:
 
 @pytest.fixture
 def transformer() -> FixtureTransformer:
-    return FixtureTransformer(SEASON_ID, TEAM_IDS)
+    return FixtureTransformer(SEASON_ID, TEAM_IDS, status_map())
 
 
 def _dto(raw: list[dict[str, Any]], external_id: int, **patch: Any) -> FixtureDTO:
@@ -133,7 +134,7 @@ def test_unexpected_error_does_not_crash_batch(raw_fixtures: list) -> None:
         def __getitem__(self, key: int) -> int:
             raise RuntimeError("beklenmeyen")
 
-    result = FixtureTransformer(SEASON_ID, BrokenMap()).transform_many(
+    result = FixtureTransformer(SEASON_ID, BrokenMap(), status_map()).transform_many(
         [_dto(raw_fixtures, 1001), _dto(raw_fixtures, 1002)]
     )
 

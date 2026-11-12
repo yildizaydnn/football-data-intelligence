@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.core.enums import SyncStatus, SyncTrigger
@@ -26,16 +26,15 @@ class SyncRunRepository(BaseRepository[SyncRun]):
 
     def record_skipped(self, trigger: SyncTrigger, reason: str) -> SyncRun:
         """İstek atılmadan atlanan sync'i kaydeder (kilit almaz; geçmişte görünsün diye)."""
-        now = _now()
         run = SyncRun(
             trigger=trigger,
             status=SyncStatus.SKIPPED,
-            started_at=now,
-            finished_at=now,
+            finished_at=func.now(),
             error_message=reason,
         )
         self.session.add(run)
         self.session.flush()
+        self._load_timestamps(run)
         return run
 
     def get_running(self) -> SyncRun | None:
@@ -70,28 +69,34 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         error_message: str | None = None,
     ) -> SyncRun:
         run.status = status
-        run.finished_at = _now()
+        run.finished_at = func.now()  # tüm sync zamanları DB saatinden (sıralama tutarlı kalsın)
         run.requests_made = requests_made
         run.inserted = inserted
         run.updated = updated
         run.skipped = skipped
         run.error_message = error_message
         self.session.flush()
+        self._load_timestamps(run)
         return run
 
-    def fail_stale(self, started_before: datetime) -> int:
-        """Süreç çöktüğü için RUNNING'de asılı kalan kayıtları FAILED yapar (kilidi açar)."""
+    def _load_timestamps(self, run: SyncRun) -> None:
+        # DB'de hesaplanan zamanları nesneye hemen yükle; oturum kapandıktan sonra da okunabilsin.
+        self.session.refresh(run, ["started_at", "finished_at"])
+
+    def fail_stale(self, older_than: timedelta) -> int:
+        """Süreç çöktüğü için RUNNING'de asılı kalan kayıtları FAILED yapar (kilidi açar).
+
+        Süre DB saatine göre ölçülür; uygulama ile DB saati farklı olsa da sonuç değişmez.
+        """
         stmt = (
             update(SyncRun)
-            .where(SyncRun.status == SyncStatus.RUNNING, SyncRun.started_at < started_before)
+            .where(
+                SyncRun.status == SyncStatus.RUNNING, SyncRun.started_at < func.now() - older_than
+            )
             .values(
                 status=SyncStatus.FAILED,
-                finished_at=_now(),
+                finished_at=func.now(),
                 error_message="Stale run: zaman aşımı nedeniyle sonlandırıldı",
             )
         )
         return self.session.execute(stmt).rowcount
-
-
-def _now() -> datetime:
-    return datetime.now(UTC)

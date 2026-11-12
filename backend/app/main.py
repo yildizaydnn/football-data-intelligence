@@ -9,6 +9,7 @@ from app.api.error_handlers import register_error_handlers
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.rules.engine import get_rule_engine
 from app.scheduler.setup import start_scheduler
 
 
@@ -28,6 +29,7 @@ def _operation_id(route: APIRoute) -> str:
 def create_app() -> FastAPI:
     settings = get_settings()
     setup_logging(settings.log_level)
+    get_rule_engine()  # lig kural spec'leri açılışta doğrulanır; hatalıysa uygulama başlamaz
 
     app = FastAPI(
         title=settings.app_name,

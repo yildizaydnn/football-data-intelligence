@@ -8,6 +8,7 @@ from app.repositories.base import UpsertResult
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
 from app.repositories.team_repository import TeamRepository
+from app.rules.engine import get_rule_engine
 from tests.fakes import FakeProvider
 
 LEAGUE, SEASON = 203, 2024
@@ -30,7 +31,7 @@ def repos(db_session: Session) -> Repositories:
 
 @pytest.fixture
 def pipeline(provider: FakeProvider, repos: Repositories) -> SyncPipeline:
-    return SyncPipeline(provider, repos)
+    return SyncPipeline(provider, repos, get_rule_engine())
 
 
 def test_first_run_loads_reference_and_fixtures(

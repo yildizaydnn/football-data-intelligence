@@ -39,7 +39,7 @@ class TestSyncRunRepository:
         repo = SyncRunRepository(db_session)
         run = repo.try_start(SyncTrigger.MANUAL)
 
-        count = repo.fail_stale(started_before=datetime.now(UTC) + timedelta(minutes=1))
+        count = repo.fail_stale(older_than=timedelta(minutes=-1))  # "1 dk sonrasından eski"
         db_session.refresh(run)
 
         assert count == 1
@@ -146,3 +146,14 @@ def test_list_filtered_supports_descending_order(db_session: Session, seed: Seed
     items, _ = repo.list_filtered(seed.season.id, order=SortOrder.DESC, limit=2)
 
     assert [f.external_id for f in items] == [3, 2]
+
+
+def test_run_timestamps_are_readable_after_session_closes(db_session: Session) -> None:
+    repo = SyncRunRepository(db_session)
+    finished = repo.try_start(SyncTrigger.MANUAL)
+    repo.finish(finished, SyncStatus.SUCCESS)
+    skipped = repo.record_skipped(SyncTrigger.SCHEDULED, "gerek yok")
+    db_session.expunge_all()  # zamanlanmış job sonucu oturum kapandıktan sonra okur
+
+    assert finished.finished_at is not None and finished.started_at is not None
+    assert skipped.finished_at is not None

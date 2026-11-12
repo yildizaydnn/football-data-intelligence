@@ -1,46 +1,23 @@
-"""API-Football durum kodları → MatchStatus.
+"""Sağlayıcı durum kodu → MatchStatus.
 
-Kaynak: https://www.api-football.com/documentation-v3#tag/Fixtures (status short kodları)
+Eşleme tablosu kural katmanından (rules spec → cleaning.status_map) gelir; bir lig ya da
+sezon belirli kodları farklı yorumlayabilir. Burada yalnızca normalize + arama yapılır.
 """
 
-from app.core.enums import MatchStatus
+from collections.abc import Mapping
 
-_STATUS_MAP: dict[str, MatchStatus] = {
-    # Henüz başlamadı
-    "TBD": MatchStatus.SCHEDULED,  # saat belirlenmedi
-    "NS": MatchStatus.SCHEDULED,
-    # Oynanıyor (devre arası, uzatma, penaltılar, kısa süreli duraklama dahil)
-    "1H": MatchStatus.LIVE,
-    "HT": MatchStatus.LIVE,
-    "2H": MatchStatus.LIVE,
-    "ET": MatchStatus.LIVE,
-    "BT": MatchStatus.LIVE,
-    "P": MatchStatus.LIVE,
-    "SUSP": MatchStatus.LIVE,
-    "INT": MatchStatus.LIVE,
-    "LIVE": MatchStatus.LIVE,
-    # Bitti (hükmen sonuçlar dahil; skor kesin)
-    "FT": MatchStatus.FINISHED,
-    "AET": MatchStatus.FINISHED,
-    "PEN": MatchStatus.FINISHED,
-    "AWD": MatchStatus.FINISHED,
-    "WO": MatchStatus.FINISHED,
-    # Ertelendi / iptal
-    "PST": MatchStatus.POSTPONED,
-    "CANC": MatchStatus.CANCELLED,
-    "ABD": MatchStatus.CANCELLED,
-}
+from app.core.enums import MatchStatus
 
 
 class UnknownStatusError(ValueError):
     pass
 
 
-def map_status(raw: str | None) -> MatchStatus:
+def map_status(raw: str | None, mapping: Mapping[str, MatchStatus]) -> MatchStatus:
     """Bilinmeyen kodda hata fırlatır; yanlış sınıflandırmaktansa kaydı atlamak daha güvenli."""
-    if raw is None:
+    if raw is None or not raw.strip():
         raise UnknownStatusError("durum kodu yok")
     try:
-        return _STATUS_MAP[raw.strip().upper()]
+        return mapping[raw.strip().upper()]
     except KeyError:
         raise UnknownStatusError(f"bilinmeyen durum kodu: {raw!r}") from None

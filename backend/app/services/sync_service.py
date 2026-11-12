@@ -16,6 +16,7 @@ from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
 from app.repositories.sync_repository import SyncRunRepository
 from app.repositories.team_repository import TeamRepository
+from app.rules.engine import RuleEngine, get_rule_engine
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +59,14 @@ class SyncService:
         session: Session,
         settings: Settings,
         provider: FootballDataProvider | None = None,
+        rules: RuleEngine | None = None,
     ) -> None:
         self.session = session
         self.provider = provider
         self.settings = settings
         self.sync_runs = SyncRunRepository(session)
         self.api_usage = ApiUsageRepository(session)
+        self.rules = rules or get_rule_engine()
         self.repos = Repositories(
             leagues=LeagueRepository(session),
             seasons=SeasonRepository(session),
@@ -88,7 +91,7 @@ class SyncService:
             raise RuntimeError("SyncService.run için provider gerekli")
         league_external_id = league_external_id or self.settings.default_league_id
         season = season or self.settings.default_season
-        pipeline = SyncPipeline(self.provider, self.repos)
+        pipeline = SyncPipeline(self.provider, self.repos, self.rules)
 
         self._release_stale_runs()
         if trigger is SyncTrigger.SCHEDULED and (
@@ -154,8 +157,8 @@ class SyncService:
         return SyncSchedule(enabled, self.settings.sync_cron, next_run)
 
     def _release_stale_runs(self) -> None:
-        threshold = datetime.now(UTC) - timedelta(minutes=self.settings.sync_stale_after_minutes)
-        if released := self.sync_runs.fail_stale(started_before=threshold):
+        older_than = timedelta(minutes=self.settings.sync_stale_after_minutes)
+        if released := self.sync_runs.fail_stale(older_than):
             logger.warning("%d adet takılı kalmış sync FAILED olarak kapatıldı", released)
             self.session.commit()
 

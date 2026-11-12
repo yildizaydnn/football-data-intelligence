@@ -1,13 +1,25 @@
 """Analytics modüllerinin ortak tipleri. DB, ORM veya HTTP bilmez."""
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
 from app.core.enums import MatchResult
 
-POINTS = {MatchResult.WIN: 3, MatchResult.DRAW: 1, MatchResult.LOSS: 0}
 FORM_LENGTH = 5
+
+
+@dataclass(frozen=True)
+class PointsTable:
+    """Sonuç başına puan. Değerler lig kurallarından (rules spec) gelir."""
+
+    win: int
+    draw: int
+    loss: int
+
+    def for_result(self, result: MatchResult) -> int:
+        return {MatchResult.WIN: self.win, MatchResult.DRAW: self.draw}.get(result, self.loss)
 
 
 class MatchLike(Protocol):
@@ -23,6 +35,8 @@ class MatchLike(Protocol):
     def away_goals(self) -> int | None: ...
     @property
     def kickoff_at(self) -> datetime: ...
+    @property
+    def round(self) -> str | None: ...
 
 
 def is_scored(match: MatchLike) -> bool:

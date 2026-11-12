@@ -2,7 +2,10 @@ import pytest
 
 from app.analytics.team_performance import calculate_team_performance
 from app.core.enums import MatchResult
+from tests.rules_helpers import points_table
 from tests.unit.analytics_helpers import match
+
+POINTS = points_table()
 
 W, D, L = MatchResult.WIN, MatchResult.DRAW, MatchResult.LOSS
 GS, FB, BJK, TS = 1, 2, 3, 4
@@ -18,7 +21,7 @@ SEASON = [
 
 
 def test_overall_totals_and_rates() -> None:
-    overall = calculate_team_performance(GS, SEASON).overall
+    overall = calculate_team_performance(GS, SEASON, POINTS).overall
 
     assert (overall.played, overall.won, overall.drawn, overall.lost) == (4, 2, 1, 1)
     assert (overall.goals_for, overall.goals_against, overall.points) == (6, 2, 7)
@@ -31,7 +34,7 @@ def test_overall_totals_and_rates() -> None:
 
 
 def test_home_and_away_split() -> None:
-    perf = calculate_team_performance(GS, SEASON)
+    perf = calculate_team_performance(GS, SEASON, POINTS)
 
     assert (perf.home.played, perf.home.won, perf.home.lost) == (2, 1, 1)
     assert (perf.home.goals_for, perf.home.goals_against) == (2, 1)
@@ -40,7 +43,7 @@ def test_home_and_away_split() -> None:
 
 
 def test_form_and_timeline() -> None:
-    perf = calculate_team_performance(GS, SEASON)
+    perf = calculate_team_performance(GS, SEASON, POINTS)
 
     assert perf.form == [W, D, L, W]
     assert [p.cumulative_points for p in perf.timeline] == [3, 4, 4, 7]
@@ -51,14 +54,14 @@ def test_form_and_timeline() -> None:
 
 def test_current_streak_counts_consecutive_results() -> None:
     perf = calculate_team_performance(
-        GS, [match(GS, FB, "0-1", 1), match(GS, BJK, "2-0", 2), match(TS, GS, "1-2", 3)]
+        GS, [match(GS, FB, "0-1", 1), match(GS, BJK, "2-0", 2), match(TS, GS, "1-2", 3)], POINTS
     )
 
     assert perf.current_streak == (W, 2)
 
 
 def test_team_without_matches_has_zero_rates() -> None:
-    perf = calculate_team_performance(99, SEASON)
+    perf = calculate_team_performance(99, SEASON, POINTS)
 
     assert perf.overall.played == 0
     assert perf.overall.win_rate == 0.0

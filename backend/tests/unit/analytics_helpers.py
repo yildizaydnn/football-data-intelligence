@@ -13,11 +13,13 @@ class Match:
     home_goals: int | None
     away_goals: int | None
     kickoff_at: datetime
+    round: str | None = None
 
 
-def match(home: int, away: int, score: str | None, week: int) -> Match:
+def match(home: int, away: int, score: str | None, week: int, round: str | None = None) -> Match:
     """match(1, 2, "2-1", week=1) → 1. haftada 1 evinde 2'yi 2-1 yendi."""
+    kickoff = BASE + timedelta(weeks=week)
     if score is None:
-        return Match(home, away, None, None, BASE + timedelta(weeks=week))
+        return Match(home, away, None, None, kickoff, round)
     home_goals, away_goals = (int(g) for g in score.split("-"))
-    return Match(home, away, home_goals, away_goals, BASE + timedelta(weeks=week))
+    return Match(home, away, home_goals, away_goals, kickoff, round)

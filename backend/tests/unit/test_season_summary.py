@@ -8,11 +8,10 @@ from tests.unit.analytics_helpers import Match, match
 @dataclass(frozen=True)
 class StatusMatch(Match):
     status: MatchStatus = MatchStatus.FINISHED
-    round: str | None = None
 
 
 def _with(m: Match, status: MatchStatus, round: str | None = None) -> StatusMatch:
-    return StatusMatch(**vars(m), status=status, round=round)
+    return StatusMatch(**{**vars(m), "round": round}, status=status)
 
 
 def test_summary_counts_only_finished_matches_for_goals_and_results() -> None:

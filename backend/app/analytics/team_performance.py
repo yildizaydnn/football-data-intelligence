@@ -6,8 +6,8 @@ from datetime import datetime
 
 from app.analytics.common import (
     FORM_LENGTH,
-    POINTS,
     MatchLike,
+    PointsTable,
     goals_for_team,
     result_for,
     scored_in_order,
@@ -27,10 +27,7 @@ class SplitStats:
     goals_against: int = 0
     clean_sheets: int = 0
     failed_to_score: int = 0
-
-    @property
-    def points(self) -> int:
-        return self.won * POINTS[MatchResult.WIN] + self.drawn * POINTS[MatchResult.DRAW]
+    points: int = 0
 
     @property
     def goal_difference(self) -> int:
@@ -60,8 +57,9 @@ class SplitStats:
     def points_per_game(self) -> float:
         return _ratio(self.points, self.played)
 
-    def record(self, scored: int, conceded: int, result: MatchResult) -> None:
+    def record(self, scored: int, conceded: int, result: MatchResult, points: int) -> None:
         self.played += 1
+        self.points += points
         self.goals_for += scored
         self.goals_against += conceded
         self.clean_sheets += conceded == 0
@@ -110,7 +108,9 @@ class TeamPerformance:
         return last, count
 
 
-def calculate_team_performance(team_id: int, matches: Iterable[MatchLike]) -> TeamPerformance:
+def calculate_team_performance(
+    team_id: int, matches: Iterable[MatchLike], points: PointsTable
+) -> TeamPerformance:
     """Takımın oynadığı skorlu maçlardan performans özeti. Takımın oynamadığı maçlar yok sayılır."""
     perf = TeamPerformance(team_id)
     cumulative = 0
@@ -121,10 +121,11 @@ def calculate_team_performance(team_id: int, matches: Iterable[MatchLike]) -> Te
             continue
         scored, conceded = goals_for_team(match, team_id)
         result = result_for(match, team_id)
-        cumulative += POINTS[result]
+        earned = points.for_result(result)
+        cumulative += earned
 
-        perf.overall.record(scored, conceded, result)
-        (perf.home if is_home else perf.away).record(scored, conceded, result)
+        perf.overall.record(scored, conceded, result, earned)
+        (perf.home if is_home else perf.away).record(scored, conceded, result, earned)
         perf.timeline.append(
             TimelinePoint(
                 kickoff_at=match.kickoff_at,

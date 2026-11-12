@@ -1,6 +1,15 @@
-from app.analytics.standings import calculate_standings
+from app.analytics.standings import calculate_standings as _calculate
 from app.core.enums import MatchResult
+from tests.rules_helpers import standings_rules
 from tests.unit.analytics_helpers import match
+
+# Test maçlarının "round" bilgisi yok; hafta filtresi kapatılır.
+RULES = standings_rules(round_pattern=None)
+
+
+def calculate_standings(matches, team_ids=()):
+    return _calculate(matches, RULES, team_ids)
+
 
 W, D, L = MatchResult.WIN, MatchResult.DRAW, MatchResult.LOSS
 GS, FB, BJK, TS = 1, 2, 3, 4

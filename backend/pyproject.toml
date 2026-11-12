@@ -10,6 +10,7 @@ dependencies = [
     "httpx>=0.28.1",
     "psycopg[binary]>=3.3.9",
     "pydantic-settings>=2.16.2",
+    "pyyaml>=6.0.3",
     "sqlalchemy>=2.0",
     "tenacity>=9.2.1",
     "uvicorn[standard]>=0.54.0",
@@ -23,6 +24,7 @@ dev = [
     "pytest>=9.2.0",
     "respx>=0.23.1",
     "ruff>=0.17.4",
+    "types-pyyaml>=6.0.12.20261111",
 ]
 
 [tool.ruff]

@@ -20,6 +20,7 @@ from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
 from app.repositories.sync_repository import SyncRunRepository
 from app.repositories.team_repository import TeamRepository
+from app.rules.engine import RuleEngine, get_rule_engine
 from app.services.fixture_service import FixtureService
 from app.services.league_service import LeagueService
 from app.services.overview_service import OverviewService
@@ -37,6 +38,7 @@ def get_provider(settings: SettingsDep) -> Iterator[FootballDataProvider]:
 
 
 ProviderDep = Annotated[FootballDataProvider, Depends(get_provider)]
+RuleEngineDep = Annotated[RuleEngine, Depends(get_rule_engine)]
 
 
 def require_sync_token(
@@ -59,12 +61,16 @@ def get_fixture_service(session: SessionDep, leagues: LeagueServiceDep) -> Fixtu
     return FixtureService(FixtureRepository(session), leagues)
 
 
-def get_standings_service(session: SessionDep, leagues: LeagueServiceDep) -> StandingsService:
-    return StandingsService(FixtureRepository(session), TeamRepository(session), leagues)
+def get_standings_service(
+    session: SessionDep, leagues: LeagueServiceDep, rules: RuleEngineDep
+) -> StandingsService:
+    return StandingsService(FixtureRepository(session), TeamRepository(session), leagues, rules)
 
 
-def get_team_stats_service(session: SessionDep, leagues: LeagueServiceDep) -> TeamStatsService:
-    return TeamStatsService(FixtureRepository(session), TeamRepository(session), leagues)
+def get_team_stats_service(
+    session: SessionDep, leagues: LeagueServiceDep, rules: RuleEngineDep
+) -> TeamStatsService:
+    return TeamStatsService(FixtureRepository(session), TeamRepository(session), leagues, rules)
 
 
 StandingsServiceDep = Annotated[StandingsService, Depends(get_standings_service)]
@@ -79,9 +85,9 @@ def get_overview_service(
 
 
 def get_sync_service(
-    session: SessionDep, provider: ProviderDep, settings: SettingsDep
+    session: SessionDep, provider: ProviderDep, settings: SettingsDep, rules: RuleEngineDep
 ) -> SyncService:
-    return SyncService(session, settings, provider)
+    return SyncService(session, settings, provider, rules)
 
 
 def get_sync_status_service(session: SessionDep, settings: SettingsDep) -> SyncService:

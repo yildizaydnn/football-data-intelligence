@@ -1,0 +1,28 @@
+league: 203 # API-Football: Süper Lig (Türkiye)
+
+meta:
+  name: Süper Lig
+  sources:
+    - TFF Futbol Müsabaka Talimatı (puan eşitliği maddesi)
+  verified: false
+  notes: >
+    Değerler genel bilgiyle yazıldı, resmi talimatla karşılaştırılmalı.
+    Avrupa kontenjanları kupa şampiyonlarına ve ülke katsayısına göre sezondan sezona
+    değiştiği için yalnızca Şampiyonlar Ligi ve küme düşme bölgeleri tanımlı.
+
+standings:
+  # Eşitlikte önce kendi aralarındaki maçlar (tüm karşılıklı maçlar oynandıysa).
+  tiebreakers: [points, h2h_points, h2h_goal_difference, goal_difference, goals_for, wins]
+
+zones:
+  - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
+
+seasons:
+  2023:
+    zones:
+      - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
+      - { from: -4, to: -1, kind: relegation, label: Küme düşme }
+  2024:
+    zones:
+      - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
+      - { from: -4, to: -1, kind: relegation, label: Küme düşme }

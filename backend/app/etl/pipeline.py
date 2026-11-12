@@ -13,6 +13,7 @@ from app.repositories.base import UpsertResult
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
 from app.repositories.team_repository import TeamRepository
+from app.rules.engine import RuleEngine
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +56,12 @@ class SyncPipeline:
     pipeline patlasa bile harcanan isteği kotaya yazabilir.
     """
 
-    def __init__(self, provider: FootballDataProvider, repos: Repositories) -> None:
+    def __init__(
+        self, provider: FootballDataProvider, repos: Repositories, rules: RuleEngine
+    ) -> None:
         self.provider = provider
         self.repos = repos
+        self.rules = rules
         self.requests_made = 0
         self.requests_remaining: int | None = None
 
@@ -140,7 +144,10 @@ class SyncPipeline:
             for team_id in (dto.teams.home.id, dto.teams.away.id)
             if team_id is not None
         ]
-        transformer = FixtureTransformer(season.id, self.repos.teams.id_map(team_external_ids))
+        cleaning = self.rules.resolve(league_external_id, season_year).cleaning
+        transformer = FixtureTransformer(
+            season.id, self.repos.teams.id_map(team_external_ids), cleaning.status_map
+        )
         fixtures = transformer.transform_many(response.data)
         result.skipped += fixtures.skipped
         result.upsert += self.repos.fixtures.upsert_with_changes(fixtures.items, sync_run_id)
