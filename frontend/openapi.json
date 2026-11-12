@@ -1774,7 +1774,8 @@
           "running",
           "success",
           "partial",
-          "failed"
+          "failed",
+          "skipped"
         ],
         "title": "SyncStatus"
       },

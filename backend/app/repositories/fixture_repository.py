@@ -10,6 +10,8 @@ from app.core.enums import MatchStatus
 from app.models import Fixture, FixtureChange
 from app.repositories.base import BaseRepository, UpsertResult
 
+PENDING_STATUSES = (MatchStatus.SCHEDULED, MatchStatus.LIVE, MatchStatus.POSTPONED)
+
 
 class FixtureRepository(BaseRepository[Fixture]):
     model = Fixture
@@ -74,6 +76,13 @@ class FixtureRepository(BaseRepository[Fixture]):
             .limit(limit)
         )
         return list(self.session.scalars(stmt))
+
+    def count_by_season(self, season_id: int) -> int:
+        return self.count(Fixture.season_id == season_id)
+
+    def count_pending(self, season_id: int) -> int:
+        """Sonucu henüz kesinleşmemiş (planlanmış, canlı, ertelenmiş) maç sayısı."""
+        return self.count(Fixture.season_id == season_id, Fixture.status.in_(PENDING_STATUSES))
 
     def list_changes(self, fixture_id: int) -> list[FixtureChange]:
         stmt = (

@@ -65,3 +65,70 @@ def test_incremental_sync_fits_into_small_budget(db_session: Session) -> None:
 
     with pytest.raises(QuotaExceededError):
         service.run(SyncTrigger.MANUAL)
+
+
+def _finish_all(provider: FakeProvider) -> None:
+    """Sezonu bitmiş hale getirir: tüm maçlar FT ve skorlu."""
+    for item in provider.fixtures:
+        item["fixture"]["status"]["short"] = "FT"
+        item["goals"] = {"home": item["goals"]["home"] or 1, "away": item["goals"]["away"] or 0}
+
+
+class TestUnnecessaryRequests:
+    def test_scheduled_sync_is_skipped_when_season_is_finished(self, db_session: Session) -> None:
+        provider = FakeProvider()
+        _finish_all(provider)
+        service = SyncService(db_session, _settings(100), provider)
+        service.run(SyncTrigger.INITIAL)
+        provider.calls.clear()
+
+        run = service.run(SyncTrigger.SCHEDULED)
+
+        assert provider.calls == []
+        assert run.status.value == "skipped"
+        assert run.requests_made == 0
+        assert "tüm maçlar sonuçlandı" in run.error_message
+        assert service.get_usage().requests_used == 3  # sadece ilk yükleme
+
+    def test_manual_sync_is_never_skipped(self, db_session: Session) -> None:
+        provider = FakeProvider()
+        _finish_all(provider)
+        service = SyncService(db_session, _settings(100), provider)
+        service.run(SyncTrigger.INITIAL)
+        provider.calls.clear()
+
+        service.run(SyncTrigger.MANUAL)
+
+        assert provider.calls == ["get_fixtures"]
+
+    def test_scheduled_sync_runs_while_matches_are_pending(self, db_session: Session) -> None:
+        provider = FakeProvider()  # örnek veride planlanmış/canlı/ertelenmiş maçlar var
+        service = SyncService(db_session, _settings(100), provider)
+        service.run(SyncTrigger.INITIAL)
+        provider.calls.clear()
+
+        run = service.run(SyncTrigger.SCHEDULED)
+
+        assert provider.calls == ["get_fixtures"]
+        assert run.status.value != "skipped"
+
+    def test_first_scheduled_sync_is_not_skipped(self, db_session: Session) -> None:
+        provider = FakeProvider()
+        _finish_all(provider)
+
+        run = SyncService(db_session, _settings(100), provider).run(SyncTrigger.SCHEDULED)
+
+        assert provider.calls == ["get_league", "get_teams", "get_fixtures"]
+        assert run.status.value != "skipped"
+
+    def test_skipped_run_does_not_block_next_sync(self, db_session: Session) -> None:
+        provider = FakeProvider()
+        _finish_all(provider)
+        service = SyncService(db_session, _settings(100), provider)
+        service.run(SyncTrigger.INITIAL)
+        service.run(SyncTrigger.SCHEDULED)
+
+        assert service.get_state().running is None
+        run = service.run(SyncTrigger.MANUAL)
+        assert run.status.value in ("success", "partial")  # örnek veride 1 bozuk kayıt var
+        assert run.requests_made == 1

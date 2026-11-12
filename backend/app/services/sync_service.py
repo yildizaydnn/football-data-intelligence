@@ -91,6 +91,13 @@ class SyncService:
         pipeline = SyncPipeline(self.provider, self.repos)
 
         self._release_stale_runs()
+        if trigger is SyncTrigger.SCHEDULED and (
+            reason := self._skip_reason(league_external_id, season)
+        ):
+            run = self.sync_runs.record_skipped(trigger, reason)
+            self.session.commit()
+            logger.info("Zamanlanmış sync atlandı: %s", reason)
+            return run
         self._check_budget(pipeline.estimate_requests(league_external_id, season, full=full))
 
         run = self.sync_runs.try_start(trigger)
@@ -151,6 +158,19 @@ class SyncService:
         if released := self.sync_runs.fail_stale(started_before=threshold):
             logger.warning("%d adet takılı kalmış sync FAILED olarak kapatıldı", released)
             self.session.commit()
+
+    def _skip_reason(self, league_external_id: int, season: int) -> str | None:
+        """Zamanlanmış sync gereksizse nedeni. Sezonda sonuçlanmamış maç kalmadıysa API'de
+        değişecek bir şey yoktur; elle tetiklenen sync bu kontrolden muaftır."""
+        league = self.repos.leagues.get_by_external_id(league_external_id)
+        season_row = league and self.repos.seasons.get_by_year(league.id, season)
+        if not season_row:
+            return None  # henüz yüklenmemiş: ilk yükleme gerekli
+        if self.repos.fixtures.count_by_season(season_row.id) == 0:
+            return None
+        if self.repos.fixtures.count_pending(season_row.id) == 0:
+            return "Sezondaki tüm maçlar sonuçlandı; API isteği atılmadı"
+        return None
 
     def _check_budget(self, needed: int) -> None:
         remaining = self.api_usage.remaining_budget(self.settings.api_football_daily_limit)

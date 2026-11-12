@@ -546,7 +546,7 @@ export interface components {
          * SyncStatus
          * @enum {string}
          */
-        SyncStatus: "running" | "success" | "partial" | "failed";
+        SyncStatus: "running" | "success" | "partial" | "failed" | "skipped";
         /**
          * SyncTrigger
          * @enum {string}

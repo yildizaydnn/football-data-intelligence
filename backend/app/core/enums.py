@@ -28,3 +28,4 @@ class SyncStatus(StrEnum):
     SUCCESS = "success"
     PARTIAL = "partial"
     FAILED = "failed"
+    SKIPPED = "skipped"  # gereksiz bulundu, API'ye istek atılmadı

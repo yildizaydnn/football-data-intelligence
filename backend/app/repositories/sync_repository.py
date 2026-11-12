@@ -24,6 +24,20 @@ class SyncRunRepository(BaseRepository[SyncRun]):
             return None
         return run
 
+    def record_skipped(self, trigger: SyncTrigger, reason: str) -> SyncRun:
+        """İstek atılmadan atlanan sync'i kaydeder (kilit almaz; geçmişte görünsün diye)."""
+        now = _now()
+        run = SyncRun(
+            trigger=trigger,
+            status=SyncStatus.SKIPPED,
+            started_at=now,
+            finished_at=now,
+            error_message=reason,
+        )
+        self.session.add(run)
+        self.session.flush()
+        return run
+
     def get_running(self) -> SyncRun | None:
         return self.session.scalar(select(SyncRun).where(SyncRun.status == SyncStatus.RUNNING))
 
