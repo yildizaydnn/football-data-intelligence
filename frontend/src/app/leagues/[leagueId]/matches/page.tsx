@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import { ComingSoon } from "@/shared/components/coming-soon";
+import { MatchesView } from "@/features/fixtures/matches-view";
 
 export const metadata: Metadata = { title: "Maçlar" };
 
 export default function MatchesPage() {
-  return <ComingSoon title="Maçlar" />;
+  return <MatchesView />;
 }

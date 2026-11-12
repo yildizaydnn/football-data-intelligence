@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.core.enums import MatchStatus
+from app.core.enums import MatchStatus, SortOrder
 from app.core.exceptions import NotFoundError
 from app.models import Fixture, FixtureChange
 from app.repositories.fixture_repository import FixtureRepository
@@ -14,6 +14,7 @@ class FixtureFilters:
     team_id: int | None = None
     date_from: datetime | None = None
     date_to: datetime | None = None
+    order: SortOrder = SortOrder.ASC
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,7 @@ class FixtureService:
             team_id=filters.team_id,
             date_from=filters.date_from,
             date_to=filters.date_to,
+            order=filters.order,
             limit=limit,
             offset=offset,
         )

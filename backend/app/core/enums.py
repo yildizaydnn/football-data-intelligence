@@ -17,6 +17,11 @@ class MatchResult(StrEnum):
     LOSS = "loss"
 
 
+class SortOrder(StrEnum):
+    ASC = "asc"
+    DESC = "desc"
+
+
 class SyncTrigger(StrEnum):
     MANUAL = "manual"
     SCHEDULED = "scheduled"

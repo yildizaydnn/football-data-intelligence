@@ -2,7 +2,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.core.enums import MatchStatus, SyncStatus, SyncTrigger
+from app.core.enums import MatchStatus, SortOrder, SyncStatus, SyncTrigger
 from app.models import Team
 from app.repositories.api_usage_repository import ApiUsageRepository
 from app.repositories.fixture_repository import FixtureRepository
@@ -132,3 +132,17 @@ def test_latest_data_update_ignores_skipped_and_failed(db_session: Session) -> N
 
     assert repo.latest().status is SyncStatus.SKIPPED
     assert repo.latest_data_update() == good
+
+
+def test_list_filtered_supports_descending_order(db_session: Session, seed: Seed) -> None:
+    repo = FixtureRepository(db_session)
+    repo.upsert(
+        [
+            seed.fixture_item(i, kickoff_at=datetime(2024, 9, i, 17, 0, tzinfo=UTC))
+            for i in (1, 2, 3)
+        ]
+    )
+
+    items, _ = repo.list_filtered(seed.season.id, order=SortOrder.DESC, limit=2)
+
+    assert [f.external_id for f in items] == [3, 2]

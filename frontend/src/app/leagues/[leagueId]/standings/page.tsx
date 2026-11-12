@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 
-import { ComingSoon } from "@/shared/components/coming-soon";
+import { StandingsSkeleton, StandingsTable } from "@/features/standings/standings-table";
+import { QueryBoundary } from "@/shared/components/query-boundary";
 
 export const metadata: Metadata = { title: "Puan Tablosu" };
 
 export default function StandingsPage() {
-  return <ComingSoon title="Puan Tablosu" />;
+  return (
+    <QueryBoundary fallback={<StandingsSkeleton />}>
+      <StandingsTable />
+    </QueryBoundary>
+  );
 }

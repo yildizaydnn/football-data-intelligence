@@ -403,6 +403,17 @@
             "description": "Hariç, ISO 8601"
           },
           {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder",
+              "description": "Başlama saatine göre sıra",
+              "default": "asc"
+            },
+            "description": "Başlama saatine göre sıra"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -1431,6 +1442,14 @@
           "current_round"
         ],
         "title": "SeasonSummaryOut"
+      },
+      "SortOrder": {
+        "type": "string",
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortOrder"
       },
       "SplitStatsOut": {
         "properties": {

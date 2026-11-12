@@ -422,6 +422,11 @@ export interface components {
             goals_by_round: components["schemas"]["RoundGoalsOut"][];
             current_round: components["schemas"]["RoundGoalsOut"] | null;
         };
+        /**
+         * SortOrder
+         * @enum {string}
+         */
+        SortOrder: "asc" | "desc";
         /** SplitStatsOut */
         SplitStatsOut: {
             /** Played */
@@ -853,6 +858,8 @@ export interface operations {
                 date_from?: string | null;
                 /** @description Hariç, ISO 8601 */
                 date_to?: string | null;
+                /** @description Başlama saatine göre sıra */
+                order?: components["schemas"]["SortOrder"];
                 limit?: number;
                 offset?: number;
             };

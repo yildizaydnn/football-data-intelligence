@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy import ColumnElement, or_, select
 from sqlalchemy.orm import joinedload
 
-from app.core.enums import MatchStatus
+from app.core.enums import MatchStatus, SortOrder
 from app.models import Fixture, FixtureChange
 from app.repositories.base import BaseRepository, UpsertResult
 
@@ -33,16 +33,22 @@ class FixtureRepository(BaseRepository[Fixture]):
         team_id: int | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
+        order: SortOrder = SortOrder.ASC,
         limit: int | None = None,
         offset: int = 0,
     ) -> tuple[list[Fixture], int]:
         """Filtreli maç listesi + toplam kayıt sayısı (sayfalama için)."""
         filters = self._filters(season_id, status, team_id, date_from, date_to)
+        ordering = (
+            (Fixture.kickoff_at, Fixture.id)
+            if order is SortOrder.ASC
+            else (Fixture.kickoff_at.desc(), Fixture.id.desc())
+        )
         stmt = (
             select(Fixture)
             .options(joinedload(Fixture.home_team), joinedload(Fixture.away_team))
             .where(*filters)
-            .order_by(Fixture.kickoff_at, Fixture.id)
+            .order_by(*ordering)
             .offset(offset)
             .limit(limit)
         )

@@ -12,6 +12,7 @@ export type FixtureQuery = LeagueScope & {
   teamId?: number;
   dateFrom?: string;
   dateTo?: string;
+  order?: "asc" | "desc";
   limit?: number;
   offset?: number;
 };
@@ -36,7 +37,17 @@ export const endpoints = {
       }),
     ),
 
-  fixtures: ({ leagueId, season, status, teamId, dateFrom, dateTo, limit, offset }: FixtureQuery) =>
+  fixtures: ({
+    leagueId,
+    season,
+    status,
+    teamId,
+    dateFrom,
+    dateTo,
+    order,
+    limit,
+    offset,
+  }: FixtureQuery) =>
     unwrap(
       api.GET("/api/v1/leagues/{league_id}/fixtures", {
         params: {
@@ -47,6 +58,7 @@ export const endpoints = {
             team_id: teamId,
             date_from: dateFrom,
             date_to: dateTo,
+            order,
             limit,
             offset,
           },
