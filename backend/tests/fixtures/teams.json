@@ -1,0 +1,17 @@
+{
+  "get": "teams",
+  "parameters": {"league": "203", "season": "2024"},
+  "errors": [],
+  "results": 4,
+  "paging": {"current": 1, "total": 1},
+  "response": [
+    {"team": {"id": 645, "name": "Galatasaray", "code": "GAL", "country": "Turkey", "founded": 1905, "national": false, "logo": "https://media.api-sports.io/football/teams/645.png"},
+     "venue": {"id": 1579, "name": "RAMS Park", "city": "İstanbul", "capacity": 52280}},
+    {"team": {"id": 611, "name": "Fenerbahçe", "code": "FEN", "country": "Turkey", "founded": 1907, "national": false, "logo": "https://media.api-sports.io/football/teams/611.png"},
+     "venue": {"id": 1565, "name": "Ülker Stadyumu Fenerbahçe Şükrü Saracoğlu Spor Kompleksi", "city": "İstanbul", "capacity": 50509}},
+    {"team": {"id": 549, "name": "Beşiktaş", "code": "BES", "country": "Turkey", "founded": 1903, "national": false, "logo": "https://media.api-sports.io/football/teams/549.png"},
+     "venue": {"id": 19129, "name": "Tüpraş Stadyumu", "city": "İstanbul", "capacity": 42590}},
+    {"team": {"id": 998, "name": "Trabzonspor", "code": null, "country": "Turkey", "founded": 1967, "national": false, "logo": "https://media.api-sports.io/football/teams/998.png"},
+     "venue": {"id": null, "name": null, "city": null, "capacity": null}}
+  ]
+}

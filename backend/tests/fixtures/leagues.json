@@ -1,0 +1,17 @@
+{
+  "get": "leagues",
+  "parameters": {"id": "203"},
+  "errors": [],
+  "results": 1,
+  "paging": {"current": 1, "total": 1},
+  "response": [
+    {
+      "league": {"id": 203, "name": "Süper Lig", "type": "League", "logo": "https://media.api-sports.io/football/leagues/203.png"},
+      "country": {"name": "Turkey", "code": "TR", "flag": "https://media.api-sports.io/flags/tr.svg"},
+      "seasons": [
+        {"year": 2023, "start": "2023-08-11", "end": "2024-05-26", "current": false, "coverage": {}},
+        {"year": 2024, "start": "2024-08-09", "end": "2025-06-01", "current": true, "coverage": {}}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "get": "fixtures",
+  "parameters": {"league": "203", "season": "2024", "timezone": "UTC"},
+  "errors": [],
+  "results": 6,
+  "paging": {"current": 1, "total": 1},
+  "response": [
+    {
+      "fixture": {"id": 1001, "referee": "A. Kardeşler", "timezone": "UTC", "date": "2024-09-21T16:00:00+00:00", "timestamp": 1726934400,
+                  "status": {"long": "Match Finished", "short": "FT", "elapsed": 90}},
+      "league": {"id": 203, "name": "Süper Lig", "season": 2024, "round": "Regular Season - 6"},
+      "teams": {"home": {"id": 645, "name": "Galatasaray", "winner": false}, "away": {"id": 611, "name": "Fenerbahçe", "winner": true}},
+      "goals": {"home": 1, "away": 3},
+      "score": {"halftime": {"home": 0, "away": 1}, "fulltime": {"home": 1, "away": 3}, "extratime": {"home": null, "away": null}, "penalty": {"home": null, "away": null}}
+    },
+    {
+      "fixture": {"id": 1002, "referee": null, "timezone": "UTC", "date": "2024-09-22T17:00:00+00:00", "timestamp": 1727024400,
+                  "status": {"long": "Match Finished", "short": "FT", "elapsed": 90}},
+      "league": {"id": 203, "name": "Süper Lig", "season": 2024, "round": "Regular Season - 6"},
+      "teams": {"home": {"id": 549, "name": "Beşiktaş", "winner": null}, "away": {"id": 998, "name": "Trabzonspor", "winner": null}},
+      "goals": {"home": 1, "away": 1},
+      "score": {"halftime": {"home": 0, "away": 0}, "fulltime": {"home": 1, "away": 1}, "extratime": {"home": null, "away": null}, "penalty": {"home": null, "away": null}}
+    },
+    {
+      "fixture": {"id": 1003, "referee": null, "timezone": "UTC", "date": "2024-09-28T17:00:00+00:00", "timestamp": 1727542800,
+                  "status": {"long": "Second Half", "short": "2H", "elapsed": 67}},
+      "league": {"id": 203, "name": "Süper Lig", "season": 2024, "round": "Regular Season - 7"},
+      "teams": {"home": {"id": 611, "name": "Fenerbahçe", "winner": null}, "away": {"id": 549, "name": "Beşiktaş", "winner": null}},
+      "goals": {"home": 2, "away": 0},
+      "score": {"halftime": {"home": 1, "away": 0}, "fulltime": {"home": null, "away": null}, "extratime": {"home": null, "away": null}, "penalty": {"home": null, "away": null}}
+    },
+    {
+      "fixture": {"id": 1004, "referee": null, "timezone": "UTC", "date": "2024-10-05T17:00:00+00:00", "timestamp": 1728147600,
+                  "status": {"long": "Not Started", "short": "NS", "elapsed": null}},
+      "league": {"id": 203, "name": "Süper Lig", "season": 2024, "round": "Regular Season - 8"},
+      "teams": {"home": {"id": 998, "name": "Trabzonspor", "winner": null}, "away": {"id": 645, "name": "Galatasaray", "winner": null}},
+      "goals": {"home": null, "away": null},
+      "score": {"halftime": {"home": null, "away": null}, "fulltime": {"home": null, "away": null}, "extratime": {"home": null, "away": null}, "penalty": {"home": null, "away": null}}
+    },
+    {
+      "fixture": {"id": 1005, "referee": null, "timezone": "UTC", "date": "2024-10-06T17:00:00+00:00", "timestamp": 1728234000,
+                  "status": {"long": "Match Postponed", "short": "PST", "elapsed": null}},
+      "league": {"id": 203, "name": "Süper Lig", "season": 2024, "round": "Regular Season - 8"},
+      "teams": {"home": {"id": 611, "name": "Fenerbahçe", "winner": null}, "away": {"id": 998, "name": "Trabzonspor", "winner": null}},
+      "goals": {"home": null, "away": null},
+      "score": {"halftime": {"home": null, "away": null}, "fulltime": {"home": null, "away": null}, "extratime": {"home": null, "away": null}, "penalty": {"home": null, "away": null}}
+    },
+    {
+      "fixture": {"id": 1006, "referee": null, "timezone": "UTC", "date": "2024-10-19T17:00:00+00:00", "timestamp": 1729357200,
+                  "status": {"long": "Not Started", "short": "NS", "elapsed": null}},
+      "league": {"id": 203, "name": "Süper Lig", "season": 2024, "round": "Regular Season - 9"},
+      "teams": {"home": {"id": null, "name": null, "winner": null}, "away": {"id": 549, "name": "Beşiktaş", "winner": null}},
+      "goals": {"home": null, "away": null},
+      "score": {"halftime": {"home": null, "away": null}, "fulltime": {"home": null, "away": null}, "extratime": {"home": null, "away": null}, "penalty": {"home": null, "away": null}}
+    }
+  ]
+}

@@ -1,5 +1,8 @@
+import json
 import os
 from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
 import pytest
 from sqlalchemy import Engine, create_engine, text
@@ -8,6 +11,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models import Base
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+def load_json(name: str) -> dict[str, Any]:
+    """tests/fixtures altındaki örnek API yanıtını okur."""
+    return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
 
 
 def _test_database_url() -> str:
