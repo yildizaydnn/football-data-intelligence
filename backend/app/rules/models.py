@@ -64,8 +64,24 @@ class StandingsSpec(_Spec):
         return value
 
 
+class StatisticSpec(_Spec):
+    key: str = Field(pattern=r"^[a-z][a-z_]*$")  # bizim anahtarımız, ör. shots_on_goal
+    null_as_zero: bool = False  # sağlayıcı "olmadı" anlamında null gönderiyorsa
+
+
 class CleaningSpec(_Spec):
     status_map: dict[str, MatchStatus]  # sağlayıcı kodu ("FT") → durum
+    # Sağlayıcı istatistik adı → anahtar. Sıra arayüzdeki gösterim sırasıdır;
+    # listede olmayan istatistikler saklanmaz.
+    statistics: dict[str, StatisticSpec]
+
+    @field_validator("statistics")
+    @classmethod
+    def _unique_keys(cls, value: dict[str, StatisticSpec]) -> dict[str, StatisticSpec]:
+        keys = [spec.key for spec in value.values()]
+        if len(keys) != len(set(keys)):
+            raise ValueError("istatistik anahtarları benzersiz olmalı")
+        return value
 
     @field_validator("status_map")
     @classmethod

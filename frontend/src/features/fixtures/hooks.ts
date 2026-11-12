@@ -101,3 +101,16 @@ export const fixtureDetailQuery = (fixtureId: number) =>
 /** Dialog açıkken çekilir; dialog kendi yüklenme durumunu gösterir. */
 export const useFixtureDetail = (fixtureId: number | null) =>
   useQuery({ ...fixtureDetailQuery(fixtureId ?? 0), enabled: fixtureId !== null });
+
+/**
+ * Maç istatistikleri: ilk istekte backend sağlayıcıdan çekip saklar (1 API isteği).
+ * Bitmiş maçın istatistiği değişmez → cache süresiz; kota/yetki hataları tekrar denenmez.
+ */
+export const useFixtureStatistics = (fixtureId: number, enabled: boolean) =>
+  useQuery({
+    queryKey: ["fixtures", fixtureId, "statistics"],
+    queryFn: () => endpoints.fixtureStatistics(fixtureId),
+    enabled,
+    staleTime: Infinity,
+    retry: false,
+  });

@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 from app.core.config import Settings
 from app.core.exceptions import ProviderError
 from app.providers.api_football.client import ApiFootballClient, ApiResult
-from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO
+from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamStatisticsDTO
 from app.providers.base import ProviderResponse
 
 
@@ -43,6 +43,11 @@ class ApiFootballProvider:
         if date_from and date_to:
             params |= {"from": date_from.isoformat(), "to": date_to.isoformat()}
         return _to_response(self._client.get("/fixtures", params), FixtureDTO)
+
+    def get_fixture_statistics(self, fixture_id: int) -> ProviderResponse[TeamStatisticsDTO]:
+        """Takım başına istatistikler; API veri sağlamıyorsa boş liste döner."""
+        result = self._client.get("/fixtures/statistics", {"fixture": fixture_id})
+        return _to_response(result, TeamStatisticsDTO)
 
 
 def _to_response[T: BaseModel](result: ApiResult, dto: type[T]) -> ProviderResponse[T]:

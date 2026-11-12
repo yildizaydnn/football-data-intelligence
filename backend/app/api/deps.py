@@ -26,6 +26,7 @@ from app.services.league_service import LeagueService
 from app.services.overview_service import OverviewService
 from app.services.rules_service import RulesService
 from app.services.standings_service import StandingsService
+from app.services.statistics_service import StatisticsService
 from app.services.sync_service import SyncService
 from app.services.team_stats_service import TeamStatsService
 
@@ -106,7 +107,14 @@ def get_sync_status_service(session: SessionDep, settings: SettingsDep) -> SyncS
     return SyncService(session, settings)
 
 
+def get_statistics_service(
+    session: SessionDep, settings: SettingsDep, rules: RuleEngineDep, provider: ProviderDep
+) -> StatisticsService:
+    return StatisticsService(session, settings, rules, provider)
+
+
 FixtureServiceDep = Annotated[FixtureService, Depends(get_fixture_service)]
+StatisticsServiceDep = Annotated[StatisticsService, Depends(get_statistics_service)]
 TeamStatsServiceDep = Annotated[TeamStatsService, Depends(get_team_stats_service)]
 OverviewServiceDep = Annotated[OverviewService, Depends(get_overview_service)]
 SyncServiceDep = Annotated[SyncService, Depends(get_sync_service)]

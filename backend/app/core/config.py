@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     # Doluysa POST /sync bu değeri X-Sync-Token header'ında ister (dış cron, prod ortamı).
     sync_api_token: str = ""
     sync_stale_after_minutes: int = 30  # bu süreden uzun RUNNING kalan sync çökmüş sayılır
+    # Maç istatistikleri isteğe bağlı çekilir; günlük kotanın son N isteği sync'e ayrılır.
+    statistics_quota_reserve: int = 10
 
 
 @lru_cache

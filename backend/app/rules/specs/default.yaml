@@ -43,4 +43,26 @@ cleaning:
     CANC: cancelled
     ABD: cancelled # yarıda kaldı
 
+  # Maç istatistikleri (/fixtures/statistics): sağlayıcı adı → anahtar.
+  # Değerler sayı, "59%" ya da "3.04" gelebilir; hepsi sayıya çevrilir.
+  # null_as_zero: sağlayıcı sayımlarda 0 yerine null gönderiyor (ör. kırmızı kart yoksa).
+  statistics:
+    Ball Possession: { key: possession }
+    expected_goals: { key: expected_goals }
+    Total Shots: { key: total_shots, null_as_zero: true }
+    Shots on Goal: { key: shots_on_goal, null_as_zero: true }
+    Shots off Goal: { key: shots_off_goal, null_as_zero: true }
+    Blocked Shots: { key: blocked_shots, null_as_zero: true }
+    Shots insidebox: { key: shots_inside_box, null_as_zero: true }
+    Shots outsidebox: { key: shots_outside_box, null_as_zero: true }
+    Corner Kicks: { key: corner_kicks, null_as_zero: true }
+    Offsides: { key: offsides, null_as_zero: true }
+    Fouls: { key: fouls, null_as_zero: true }
+    Yellow Cards: { key: yellow_cards, null_as_zero: true }
+    Red Cards: { key: red_cards, null_as_zero: true }
+    Goalkeeper Saves: { key: goalkeeper_saves, null_as_zero: true }
+    Total passes: { key: total_passes, null_as_zero: true }
+    Passes accurate: { key: passes_accurate, null_as_zero: true }
+    Passes %: { key: pass_accuracy }
+
 zones: []

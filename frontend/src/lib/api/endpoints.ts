@@ -69,6 +69,13 @@ export const endpoints = {
   fixture: (fixtureId: number) =>
     unwrap(api.GET("/api/v1/fixtures/{fixture_id}", { params: { path: { fixture_id: fixtureId } } })),
 
+  fixtureStatistics: (fixtureId: number) =>
+    unwrap(
+      api.GET("/api/v1/fixtures/{fixture_id}/statistics", {
+        params: { path: { fixture_id: fixtureId } },
+      }),
+    ),
+
   teams: ({ leagueId, season }: LeagueScope) =>
     unwrap(
       api.GET("/api/v1/leagues/{league_id}/teams", {

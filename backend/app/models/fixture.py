@@ -27,6 +27,8 @@ class Fixture(Base, ExternalIdMixin, TimestampMixin):
     home_goals: Mapped[int | None]
     away_goals: Mapped[int | None]
     round: Mapped[str | None] = mapped_column(String(50))
+    # İstatistikler sağlayıcıdan istendiği an (veri olmasa da); doluysa tekrar istenmez.
+    statistics_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     season: Mapped["Season"] = relationship(back_populates="fixtures")
     home_team: Mapped[Team] = relationship(foreign_keys=[home_team_id])

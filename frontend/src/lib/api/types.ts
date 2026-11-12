@@ -19,6 +19,8 @@ export type SyncRun = Schemas["SyncRunOut"];
 export type SyncState = Schemas["SyncStateOut"];
 export type SyncUsage = Schemas["SyncUsageOut"];
 export type Rules = Schemas["RulesOut"];
+export type FixtureStatistics = Schemas["FixtureStatisticsOut"];
+export type StatLine = Schemas["StatLineOut"];
 export type Zone = Schemas["ZoneOut"];
 
 export type MatchStatus = Fixture["status"];

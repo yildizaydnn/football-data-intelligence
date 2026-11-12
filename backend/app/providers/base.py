@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
 
-from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO
+from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamStatisticsDTO
 
 
 @dataclass(frozen=True)
@@ -27,3 +27,9 @@ class FootballDataProvider(Protocol):
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> ProviderResponse[FixtureDTO]: ...
+
+
+class MatchStatsProvider(Protocol):
+    """Maç istatistikleri ayrı bir arayüz (ISP): sync tarafı bu metoda bağımlı olmaz."""
+
+    def get_fixture_statistics(self, fixture_id: int) -> ProviderResponse[TeamStatisticsDTO]: ...

@@ -11,13 +11,14 @@ import { TeamCrest } from "@/shared/components/team-crest";
 import { formatDateTime, formatMatchDay, formatTime } from "@/shared/lib/format";
 
 import { useFixtureDetail } from "./hooks";
+import { MatchStatistics } from "./match-statistics";
 
 export function MatchDetailDialog({ fixtureId, onClose }: { fixtureId: number | null; onClose: () => void }) {
   const { data, error, isPending, refetch } = useFixtureDetail(fixtureId);
 
   return (
     <Dialog open={fixtureId !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg rounded-[20px] border bg-card sm:max-w-lg">
+      <DialogContent className="max-h-[92vh] max-w-lg overflow-y-auto rounded-[20px] border bg-card sm:max-w-lg">
         {error ? (
           <>
             <DialogTitle className="sr-only">Maç detayı</DialogTitle>
@@ -44,7 +45,8 @@ function FixtureDetailView({ fixture }: { fixture: FixtureDetail }) {
         <DialogTitle className="sr-only">
           {fixture.home_team.name} - {fixture.away_team.name}
         </DialogTitle>
-        <DialogDescription className="flex flex-wrap items-center justify-between gap-2 text-sage">
+        {/* pr-8: sağ üstteki kapatma düğmesine yer */}
+        <DialogDescription className="flex flex-wrap items-center justify-between gap-2 pr-8 text-sage">
           <span>
             {formatMatchDay(fixture.kickoff_at)} · {formatTime(fixture.kickoff_at)}
             {fixture.round && ` · ${fixture.round.replace("Regular Season - ", "")}. hafta`}
@@ -60,6 +62,8 @@ function FixtureDetailView({ fixture }: { fixture: FixtureDetail }) {
         </span>
         <TeamBlock team={fixture.away_team} />
       </div>
+
+      <MatchStatistics fixture={fixture} />
 
       <section className="border-t pt-4">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">

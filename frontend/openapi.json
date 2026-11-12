@@ -596,6 +596,79 @@
         }
       }
     },
+    "/api/v1/fixtures/{fixture_id}/statistics": {
+      "get": {
+        "tags": [
+          "fixtures"
+        ],
+        "summary": "Get Fixture Statistics",
+        "description": "Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.\n\nKotanın son `STATISTICS_QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).",
+        "operationId": "get_fixture_statistics",
+        "parameters": [
+          {
+            "name": "fixture_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Fixture Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixtureStatisticsOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/leagues/{league_id}/standings": {
       "get": {
         "tags": [
@@ -1227,6 +1300,44 @@
           "away_goals"
         ],
         "title": "FixtureOut"
+      },
+      "FixtureStatisticsOut": {
+        "properties": {
+          "fixture_id": {
+            "type": "integer",
+            "title": "Fixture Id"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/StatisticsAvailability"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/StatLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fixture_id",
+          "availability",
+          "fetched_at",
+          "lines"
+        ],
+        "title": "FixtureStatisticsOut"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1898,6 +2009,52 @@
           "rules"
         ],
         "title": "StandingsOut"
+      },
+      "StatLineOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "home": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home"
+          },
+          "away": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "home",
+          "away"
+        ],
+        "title": "StatLineOut"
+      },
+      "StatisticsAvailability": {
+        "type": "string",
+        "enum": [
+          "available",
+          "unavailable",
+          "not_finished"
+        ],
+        "title": "StatisticsAvailability"
       },
       "StreakOut": {
         "properties": {

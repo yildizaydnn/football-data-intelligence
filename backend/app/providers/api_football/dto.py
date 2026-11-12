@@ -101,3 +101,16 @@ class FixtureDTO(_DTO):
     league: FixtureLeague = FixtureLeague()
     teams: FixtureTeams = FixtureTeams()
     goals: Goals = Goals()
+
+
+# --- /fixtures/statistics ---
+
+
+class StatisticItem(_DTO):
+    type: str | None = None  # "Shots on Goal", "Ball Possession", "expected_goals"...
+    value: int | float | str | None = None  # 9, "59%", "3.04" veya null
+
+
+class TeamStatisticsDTO(_DTO):
+    team: TeamInfo = TeamInfo()
+    statistics: list[StatisticItem] = []

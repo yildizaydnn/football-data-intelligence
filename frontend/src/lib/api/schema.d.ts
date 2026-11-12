@@ -143,6 +143,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fixtures/{fixture_id}/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Fixture Statistics
+         * @description Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.
+         *
+         *     Kotanın son `STATISTICS_QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).
+         */
+        get: operations["get_fixture_statistics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/leagues/{league_id}/standings": {
         parameters: {
             query?: never;
@@ -335,6 +357,16 @@ export interface components {
             home_goals: number | null;
             /** Away Goals */
             away_goals: number | null;
+        };
+        /** FixtureStatisticsOut */
+        FixtureStatisticsOut: {
+            /** Fixture Id */
+            fixture_id: number;
+            availability: components["schemas"]["StatisticsAvailability"];
+            /** Fetched At */
+            fetched_at: string | null;
+            /** Lines */
+            lines: components["schemas"]["StatLineOut"][];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -556,6 +588,20 @@ export interface components {
             rows: components["schemas"]["StandingRowOut"][];
             rules: components["schemas"]["RulesOut"];
         };
+        /** StatLineOut */
+        StatLineOut: {
+            /** Key */
+            key: string;
+            /** Home */
+            home: number | null;
+            /** Away */
+            away: number | null;
+        };
+        /**
+         * StatisticsAvailability
+         * @enum {string}
+         */
+        StatisticsAvailability: "available" | "unavailable" | "not_finished";
         /** StreakOut */
         StreakOut: {
             result: components["schemas"]["MatchResult"];
@@ -1065,6 +1111,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fixture_statistics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fixture_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FixtureStatisticsOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

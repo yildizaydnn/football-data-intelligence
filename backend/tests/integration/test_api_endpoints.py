@@ -270,3 +270,17 @@ class TestMultiLeagueAndRules:
         assert zones[1]["kind"] == "champions_league"
         assert body["rules"]["name"] == "Süper Lig"
         assert all("deduction" in row for row in body["rows"])
+
+
+def test_fixture_statistics_endpoint(client: TestClient, provider: FakeProvider, league_id: int):
+    fixtures = client.get(f"/api/v1/leagues/{league_id}/fixtures", params={"status": "finished"})
+    fixture = next(f for f in fixtures.json()["items"] if f["external_id"] == 1002)
+    provider.statistics[1002] = [
+        {"team": {"id": 549}, "statistics": [{"type": "Ball Possession", "value": "48%"}]},
+        {"team": {"id": 998}, "statistics": [{"type": "Ball Possession", "value": "52%"}]},
+    ]
+
+    body = client.get(f"/api/v1/fixtures/{fixture['id']}/statistics").json()
+
+    assert body["availability"] == "available"
+    assert body["lines"] == [{"key": "possession", "home": 48.0, "away": 52.0}]

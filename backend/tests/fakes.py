@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO
+from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamStatisticsDTO
 from app.providers.base import ProviderResponse
 from tests.conftest import load_json
 
@@ -19,6 +19,8 @@ class FakeProvider:
         self.leagues: list[dict[str, Any]] = load_json("leagues.json")["response"]
         self.teams: list[dict[str, Any]] = load_json("teams.json")["response"]
         self.fixtures: list[dict[str, Any]] = load_json("fixtures.json")["response"]
+        # Gerçek /fixtures/statistics yanıtı (Galatasaray - Başakşehir); maç id'si → yanıt
+        self.statistics: dict[int, list[dict[str, Any]]] = {}
         self.remaining = remaining
         self.calls: list[str] = []
         self.fail_on: dict[str, Exception] = {}
@@ -39,6 +41,11 @@ class FakeProvider:
         date_to: date | None = None,
     ) -> ProviderResponse[FixtureDTO]:
         return self._respond("get_fixtures", FixtureDTO, self.fixtures)
+
+    def get_fixture_statistics(self, fixture_id: int) -> ProviderResponse[TeamStatisticsDTO]:
+        return self._respond(
+            "get_fixture_statistics", TeamStatisticsDTO, self.statistics.get(fixture_id, [])
+        )
 
     def fixture(self, external_id: int) -> dict[str, Any]:
         return next(f for f in self.fixtures if f["fixture"]["id"] == external_id)

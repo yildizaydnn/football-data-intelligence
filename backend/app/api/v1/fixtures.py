@@ -3,11 +3,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import FixtureServiceDep
+from app.api.deps import FixtureServiceDep, StatisticsServiceDep
 from app.api.v1.common import SeasonQuery, error_responses
 from app.core.enums import MatchStatus, SortOrder
 from app.schemas.common import Paginated
 from app.schemas.fixture import FixtureDetailOut, FixtureOut
+from app.schemas.statistics import FixtureStatisticsOut
 from app.services.fixture_service import FixtureFilters
 
 router = APIRouter(tags=["fixtures"])
@@ -47,3 +48,16 @@ def list_fixtures(
 )
 def get_fixture(fixture_id: int, service: FixtureServiceDep) -> FixtureDetailOut:
     return FixtureDetailOut.from_detail(service.get_fixture(fixture_id))
+
+
+@router.get(
+    "/fixtures/{fixture_id}/statistics",
+    response_model=FixtureStatisticsOut,
+    responses=error_responses(404, 429, 502),
+)
+def get_fixture_statistics(fixture_id: int, service: StatisticsServiceDep) -> FixtureStatisticsOut:
+    """Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.
+
+    Kotanın son `STATISTICS_QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).
+    """
+    return FixtureStatisticsOut.from_statistics(service.get(fixture_id))
