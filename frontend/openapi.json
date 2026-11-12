@@ -1,0 +1,2083 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Football Data Intelligence API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/leagues": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "List Leagues",
+        "operationId": "list_leagues",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LeagueOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Leagues"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get League",
+        "operationId": "get_league",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeagueOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/seasons": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "List Seasons",
+        "operationId": "list_seasons",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeasonOut"
+                  },
+                  "title": "Response List Seasons"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/teams": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "List Teams",
+        "operationId": "list_teams",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamOut"
+                  },
+                  "title": "Response List Teams"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/teams/{team_id}/stats": {
+      "get": {
+        "tags": [
+          "teams"
+        ],
+        "summary": "Get Team Stats",
+        "operationId": "get_team_stats",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamStatsOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/fixtures": {
+      "get": {
+        "tags": [
+          "fixtures"
+        ],
+        "summary": "List Fixtures",
+        "operationId": "list_fixtures",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MatchStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Dahil, ISO 8601",
+              "title": "Date From"
+            },
+            "description": "Dahil, ISO 8601"
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Hariç, ISO 8601",
+              "title": "Date To"
+            },
+            "description": "Hariç, ISO 8601"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paginated_FixtureOut_"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fixtures/{fixture_id}": {
+      "get": {
+        "tags": [
+          "fixtures"
+        ],
+        "summary": "Get Fixture",
+        "operationId": "get_fixture",
+        "parameters": [
+          {
+            "name": "fixture_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Fixture Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixtureDetailOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/standings": {
+      "get": {
+        "tags": [
+          "standings"
+        ],
+        "summary": "Get Standings",
+        "operationId": "get_standings",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandingsOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/overview": {
+      "get": {
+        "tags": [
+          "overview"
+        ],
+        "summary": "Get Overview",
+        "operationId": "get_overview",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync": {
+      "post": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Trigger Sync",
+        "description": "Elle senkronizasyon. Kota yetmezse 429, başka sync çalışıyorsa 409 döner.\n\nSync başladıktan sonraki hatalar 200 + status=failed olarak döner (kayıt oluşmuştur).",
+        "operationId": "trigger_sync",
+        "parameters": [
+          {
+            "name": "x-sync-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Sync-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SyncRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncRunOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/status": {
+      "get": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Get Sync Status",
+        "operationId": "get_sync_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStateOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/usage": {
+      "get": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Get Sync Usage",
+        "operationId": "get_sync_usage",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncUsageOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "FixtureChangeOut": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "old_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Value"
+          },
+          "new_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Value"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Changed At"
+          },
+          "sync_run_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync Run Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "old_value",
+          "new_value",
+          "changed_at",
+          "sync_run_id"
+        ],
+        "title": "FixtureChangeOut"
+      },
+      "FixtureDetailOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "external_id": {
+            "type": "integer",
+            "title": "External Id"
+          },
+          "kickoff_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Kickoff At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MatchStatus"
+          },
+          "status_raw": {
+            "type": "string",
+            "title": "Status Raw"
+          },
+          "round": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round"
+          },
+          "home_team": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "away_team": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "home_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Goals"
+          },
+          "away_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Goals"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureChangeOut"
+            },
+            "type": "array",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "external_id",
+          "kickoff_at",
+          "status",
+          "status_raw",
+          "round",
+          "home_team",
+          "away_team",
+          "home_goals",
+          "away_goals",
+          "changes"
+        ],
+        "title": "FixtureDetailOut"
+      },
+      "FixtureOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "external_id": {
+            "type": "integer",
+            "title": "External Id"
+          },
+          "kickoff_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Kickoff At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MatchStatus"
+          },
+          "status_raw": {
+            "type": "string",
+            "title": "Status Raw"
+          },
+          "round": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Round"
+          },
+          "home_team": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "away_team": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "home_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Goals"
+          },
+          "away_goals": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Goals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "external_id",
+          "kickoff_at",
+          "status",
+          "status_raw",
+          "round",
+          "home_team",
+          "away_team",
+          "home_goals",
+          "away_goals"
+        ],
+        "title": "FixtureOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LeagueOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "external_id": {
+            "type": "integer",
+            "title": "External Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "external_id",
+          "name",
+          "country",
+          "logo_url"
+        ],
+        "title": "LeagueOut"
+      },
+      "MatchResult": {
+        "type": "string",
+        "enum": [
+          "win",
+          "draw",
+          "loss"
+        ],
+        "title": "MatchResult",
+        "description": "Bir maçın belirli bir takım açısından sonucu."
+      },
+      "MatchStatus": {
+        "type": "string",
+        "enum": [
+          "scheduled",
+          "live",
+          "finished",
+          "postponed",
+          "cancelled"
+        ],
+        "title": "MatchStatus"
+      },
+      "OverviewOut": {
+        "properties": {
+          "league": {
+            "$ref": "#/components/schemas/LeagueOut"
+          },
+          "season": {
+            "$ref": "#/components/schemas/SeasonOut"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SeasonSummaryOut"
+          },
+          "top_teams": {
+            "items": {
+              "$ref": "#/components/schemas/StandingRowOut"
+            },
+            "type": "array",
+            "title": "Top Teams"
+          },
+          "recent_results": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureOut"
+            },
+            "type": "array",
+            "title": "Recent Results"
+          },
+          "upcoming": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureOut"
+            },
+            "type": "array",
+            "title": "Upcoming"
+          },
+          "live": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureOut"
+            },
+            "type": "array",
+            "title": "Live"
+          },
+          "last_sync": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyncRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "league",
+          "season",
+          "summary",
+          "top_teams",
+          "recent_results",
+          "upcoming",
+          "live",
+          "last_sync"
+        ],
+        "title": "OverviewOut"
+      },
+      "Paginated_FixtureOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FixtureOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Paginated[FixtureOut]"
+      },
+      "RoundGoalsOut": {
+        "properties": {
+          "round": {
+            "type": "string",
+            "title": "Round"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "matches": {
+            "type": "integer",
+            "title": "Matches"
+          },
+          "goals": {
+            "type": "integer",
+            "title": "Goals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "round",
+          "number",
+          "matches",
+          "goals"
+        ],
+        "title": "RoundGoalsOut"
+      },
+      "SeasonOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "is_current": {
+            "type": "boolean",
+            "title": "Is Current"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "year",
+          "start_date",
+          "end_date",
+          "is_current"
+        ],
+        "title": "SeasonOut"
+      },
+      "SeasonSummaryOut": {
+        "properties": {
+          "total_matches": {
+            "type": "integer",
+            "title": "Total Matches"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/MatchStatus"
+            },
+            "type": "object",
+            "title": "By Status"
+          },
+          "finished": {
+            "type": "integer",
+            "title": "Finished"
+          },
+          "total_goals": {
+            "type": "integer",
+            "title": "Total Goals"
+          },
+          "avg_goals_per_match": {
+            "type": "number",
+            "title": "Avg Goals Per Match"
+          },
+          "home_wins": {
+            "type": "integer",
+            "title": "Home Wins"
+          },
+          "draws": {
+            "type": "integer",
+            "title": "Draws"
+          },
+          "away_wins": {
+            "type": "integer",
+            "title": "Away Wins"
+          },
+          "home_win_rate": {
+            "type": "number",
+            "title": "Home Win Rate"
+          },
+          "draw_rate": {
+            "type": "number",
+            "title": "Draw Rate"
+          },
+          "away_win_rate": {
+            "type": "number",
+            "title": "Away Win Rate"
+          },
+          "goals_by_round": {
+            "items": {
+              "$ref": "#/components/schemas/RoundGoalsOut"
+            },
+            "type": "array",
+            "title": "Goals By Round"
+          },
+          "current_round": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoundGoalsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_matches",
+          "by_status",
+          "finished",
+          "total_goals",
+          "avg_goals_per_match",
+          "home_wins",
+          "draws",
+          "away_wins",
+          "home_win_rate",
+          "draw_rate",
+          "away_win_rate",
+          "goals_by_round",
+          "current_round"
+        ],
+        "title": "SeasonSummaryOut"
+      },
+      "SplitStatsOut": {
+        "properties": {
+          "played": {
+            "type": "integer",
+            "title": "Played"
+          },
+          "won": {
+            "type": "integer",
+            "title": "Won"
+          },
+          "drawn": {
+            "type": "integer",
+            "title": "Drawn"
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost"
+          },
+          "goals_for": {
+            "type": "integer",
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "title": "Goals Against"
+          },
+          "goal_difference": {
+            "type": "integer",
+            "title": "Goal Difference"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "clean_sheets": {
+            "type": "integer",
+            "title": "Clean Sheets"
+          },
+          "failed_to_score": {
+            "type": "integer",
+            "title": "Failed To Score"
+          },
+          "win_rate": {
+            "type": "number",
+            "title": "Win Rate"
+          },
+          "draw_rate": {
+            "type": "number",
+            "title": "Draw Rate"
+          },
+          "loss_rate": {
+            "type": "number",
+            "title": "Loss Rate"
+          },
+          "avg_goals_for": {
+            "type": "number",
+            "title": "Avg Goals For"
+          },
+          "avg_goals_against": {
+            "type": "number",
+            "title": "Avg Goals Against"
+          },
+          "points_per_game": {
+            "type": "number",
+            "title": "Points Per Game"
+          }
+        },
+        "type": "object",
+        "required": [
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goals_for",
+          "goals_against",
+          "goal_difference",
+          "points",
+          "clean_sheets",
+          "failed_to_score",
+          "win_rate",
+          "draw_rate",
+          "loss_rate",
+          "avg_goals_for",
+          "avg_goals_against",
+          "points_per_game"
+        ],
+        "title": "SplitStatsOut"
+      },
+      "StandingRowOut": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "team": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "played": {
+            "type": "integer",
+            "title": "Played"
+          },
+          "won": {
+            "type": "integer",
+            "title": "Won"
+          },
+          "drawn": {
+            "type": "integer",
+            "title": "Drawn"
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost"
+          },
+          "goals_for": {
+            "type": "integer",
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "title": "Goals Against"
+          },
+          "goal_difference": {
+            "type": "integer",
+            "title": "Goal Difference"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "form": {
+            "items": {
+              "$ref": "#/components/schemas/MatchResult"
+            },
+            "type": "array",
+            "title": "Form"
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "team",
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goals_for",
+          "goals_against",
+          "goal_difference",
+          "points",
+          "form"
+        ],
+        "title": "StandingRowOut"
+      },
+      "StandingsOut": {
+        "properties": {
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/StandingRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "season",
+          "rows"
+        ],
+        "title": "StandingsOut"
+      },
+      "StreakOut": {
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/MatchResult"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result",
+          "count"
+        ],
+        "title": "StreakOut"
+      },
+      "SyncRequest": {
+        "properties": {
+          "full": {
+            "type": "boolean",
+            "title": "Full",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SyncRequest"
+      },
+      "SyncRunOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/SyncTrigger"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SyncStatus"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "requests_made": {
+            "type": "integer",
+            "title": "Requests Made"
+          },
+          "inserted": {
+            "type": "integer",
+            "title": "Inserted"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "trigger",
+          "status",
+          "started_at",
+          "finished_at",
+          "requests_made",
+          "inserted",
+          "updated",
+          "skipped",
+          "error_message"
+        ],
+        "title": "SyncRunOut"
+      },
+      "SyncScheduleOut": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "cron": {
+            "type": "string",
+            "title": "Cron"
+          },
+          "next_run_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Run At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "cron",
+          "next_run_at"
+        ],
+        "title": "SyncScheduleOut"
+      },
+      "SyncStateOut": {
+        "properties": {
+          "running": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyncRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/SyncRunOut"
+            },
+            "type": "array",
+            "title": "Recent"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/SyncScheduleOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "running",
+          "recent",
+          "schedule"
+        ],
+        "title": "SyncStateOut"
+      },
+      "SyncStatus": {
+        "type": "string",
+        "enum": [
+          "running",
+          "success",
+          "partial",
+          "failed"
+        ],
+        "title": "SyncStatus"
+      },
+      "SyncTrigger": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "scheduled",
+          "initial"
+        ],
+        "title": "SyncTrigger"
+      },
+      "SyncUsageOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "requests_used": {
+            "type": "integer",
+            "title": "Requests Used"
+          },
+          "daily_limit": {
+            "type": "integer",
+            "title": "Daily Limit"
+          },
+          "remaining": {
+            "type": "integer",
+            "title": "Remaining"
+          },
+          "provider_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Remaining"
+          },
+          "next_sync_cost": {
+            "type": "integer",
+            "title": "Next Sync Cost"
+          },
+          "can_sync": {
+            "type": "boolean",
+            "title": "Can Sync"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "requests_used",
+          "daily_limit",
+          "remaining",
+          "provider_remaining",
+          "next_sync_cost",
+          "can_sync"
+        ],
+        "title": "SyncUsageOut"
+      },
+      "TeamOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "external_id": {
+            "type": "integer",
+            "title": "External Id"
+          },
+          "venue_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "code",
+          "logo_url",
+          "external_id",
+          "venue_name"
+        ],
+        "title": "TeamOut"
+      },
+      "TeamRef": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "code",
+          "logo_url"
+        ],
+        "title": "TeamRef",
+        "description": "Başka yanıtların içine gömülen kısa takım bilgisi."
+      },
+      "TeamStatsOut": {
+        "properties": {
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "team": {
+            "$ref": "#/components/schemas/TeamOut"
+          },
+          "overall": {
+            "$ref": "#/components/schemas/SplitStatsOut"
+          },
+          "home": {
+            "$ref": "#/components/schemas/SplitStatsOut"
+          },
+          "away": {
+            "$ref": "#/components/schemas/SplitStatsOut"
+          },
+          "form": {
+            "items": {
+              "$ref": "#/components/schemas/MatchResult"
+            },
+            "type": "array",
+            "title": "Form"
+          },
+          "current_streak": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StreakOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelinePointOut"
+            },
+            "type": "array",
+            "title": "Timeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "season",
+          "team",
+          "overall",
+          "home",
+          "away",
+          "form",
+          "current_streak",
+          "timeline"
+        ],
+        "title": "TeamStatsOut"
+      },
+      "TimelinePointOut": {
+        "properties": {
+          "kickoff_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Kickoff At"
+          },
+          "opponent": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "is_home": {
+            "type": "boolean",
+            "title": "Is Home"
+          },
+          "goals_for": {
+            "type": "integer",
+            "title": "Goals For"
+          },
+          "goals_against": {
+            "type": "integer",
+            "title": "Goals Against"
+          },
+          "result": {
+            "$ref": "#/components/schemas/MatchResult"
+          },
+          "cumulative_points": {
+            "type": "integer",
+            "title": "Cumulative Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kickoff_at",
+          "opponent",
+          "is_home",
+          "goals_for",
+          "goals_against",
+          "result",
+          "cumulative_points"
+        ],
+        "title": "TimelinePointOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

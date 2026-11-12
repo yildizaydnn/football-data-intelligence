@@ -14,8 +14,11 @@ make install              # backend bağımlılıkları
 make db-up                # PostgreSQL (localhost:5433)
 make migrate              # tabloları oluştur
 make sync                 # API-Football'dan ilk veri yükleme (3 istek)
-make dev                  # http://localhost:8000/docs
+make dev                  # API: http://localhost:8000/docs
+make web                  # Arayüz: http://localhost:3000 (ayrı terminalde)
 ```
+
+Backend şeması değişince frontend tiplerini yenilemek için: `make api-types`.
 
 ## Komutlar
 

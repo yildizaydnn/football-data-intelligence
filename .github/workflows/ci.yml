@@ -57,3 +57,36 @@ jobs:
 
       - name: Tests
         run: uv run pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generated API types are up to date
+        run: |
+          pnpm gen:api
+          git diff --exit-code src/lib/api/schema.d.ts
+
+      - name: Lint and typecheck
+        run: |
+          pnpm next typegen
+          pnpm lint
+          pnpm typecheck
+
+      - name: Build
+        run: pnpm build
