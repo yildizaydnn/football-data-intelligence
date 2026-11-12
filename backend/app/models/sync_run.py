@@ -23,6 +23,9 @@ class SyncRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     trigger: Mapped[SyncTrigger] = mapped_column(str_enum(SyncTrigger))
+    # Hangi lig/sezon için çalıştığı (API id'leri); çoklu ligde geçmişi ayırt etmek için.
+    league_external_id: Mapped[int | None]
+    season: Mapped[int | None]
     status: Mapped[SyncStatus] = mapped_column(
         str_enum(SyncStatus), default=SyncStatus.RUNNING, index=True
     )

@@ -1,11 +1,12 @@
 "use client";
 
-import { useDashboardParams } from "@/features/dashboard/hooks";
+import { useDashboardParams, useLeagues } from "@/features/dashboard/hooks";
 import { PanelSkeleton } from "@/shared/components/panel";
 import { QueryBoundary } from "@/shared/components/query-boundary";
 import { EmptyState } from "@/shared/components/states";
 import { TeamCrest } from "@/shared/components/team-crest";
 import { formatSeason } from "@/shared/lib/format";
+import { nameLang } from "@/shared/lib/locale";
 
 import { GoalsChart } from "./goals-chart";
 import { HomeAway } from "./home-away";
@@ -17,6 +18,7 @@ import { TeamPicker } from "./team-picker";
 export function TeamAnalysisView() {
   const { leagueId, season, teamId } = useDashboardParams();
   const stats = useTeamStats(leagueId, teamId!, season);
+  const country = useLeagues().find((l) => l.id === leagueId)?.country;
 
   return (
     <div className="space-y-5">
@@ -27,7 +29,9 @@ export function TeamAnalysisView() {
             <p className="text-sm text-sage">
               Takım analizi · {formatSeason(stats.season)} · {stats.overall.played} maç
             </p>
-            <h1 className="font-display text-5xl font-extrabold uppercase leading-none">{stats.team.name}</h1>
+            <h1 lang={nameLang(country)} className="font-display text-5xl font-extrabold uppercase leading-none">
+              {stats.team.name}
+            </h1>
           </div>
         </div>
         <QueryBoundary fallback={<PanelSkeleton className="h-[66px] w-60" />} inline>

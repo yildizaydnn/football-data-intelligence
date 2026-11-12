@@ -11,12 +11,19 @@ from app.repositories.base import BaseRepository
 class SyncRunRepository(BaseRepository[SyncRun]):
     model = SyncRun
 
-    def try_start(self, trigger: SyncTrigger) -> SyncRun | None:
+    def try_start(
+        self, trigger: SyncTrigger, league_external_id: int | None = None, season: int | None = None
+    ) -> SyncRun | None:
         """RUNNING kaydı açar. Zaten çalışan bir sync varsa None döner.
 
         Kontrolü kısmi unique index yapar; iki istek aynı anda gelse bile yalnızca biri başlar.
         """
-        run = SyncRun(trigger=trigger, status=SyncStatus.RUNNING)
+        run = SyncRun(
+            trigger=trigger,
+            status=SyncStatus.RUNNING,
+            league_external_id=league_external_id,
+            season=season,
+        )
         try:
             with self.session.begin_nested():
                 self.session.add(run)
@@ -24,11 +31,19 @@ class SyncRunRepository(BaseRepository[SyncRun]):
             return None
         return run
 
-    def record_skipped(self, trigger: SyncTrigger, reason: str) -> SyncRun:
+    def record_skipped(
+        self,
+        trigger: SyncTrigger,
+        reason: str,
+        league_external_id: int | None = None,
+        season: int | None = None,
+    ) -> SyncRun:
         """İstek atılmadan atlanan sync'i kaydeder (kilit almaz; geçmişte görünsün diye)."""
         run = SyncRun(
             trigger=trigger,
             status=SyncStatus.SKIPPED,
+            league_external_id=league_external_id,
+            season=season,
             finished_at=func.now(),
             error_message=reason,
         )
@@ -44,11 +59,17 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         stmt = select(SyncRun).order_by(SyncRun.started_at.desc(), SyncRun.id.desc()).limit(1)
         return self.session.scalar(stmt)
 
-    def latest_data_update(self) -> SyncRun | None:
-        """Veriyi gerçekten yazan son sync (başarılı/kısmi); atlanan/başarısız sayılmaz."""
+    def latest_data_update(self, league_external_id: int | None = None) -> SyncRun | None:
+        """Veriyi gerçekten yazan son sync (başarılı/kısmi); atlanan/başarısız sayılmaz.
+
+        Lig verilirse yalnızca o ligin sync'leri dikkate alınır.
+        """
+        filters = [SyncRun.status.in_((SyncStatus.SUCCESS, SyncStatus.PARTIAL))]
+        if league_external_id is not None:
+            filters.append(SyncRun.league_external_id == league_external_id)
         stmt = (
             select(SyncRun)
-            .where(SyncRun.status.in_((SyncStatus.SUCCESS, SyncStatus.PARTIAL)))
+            .where(*filters)
             .order_by(SyncRun.started_at.desc(), SyncRun.id.desc())
             .limit(1)
         )

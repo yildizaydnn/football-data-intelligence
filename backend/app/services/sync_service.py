@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.enums import SyncStatus, SyncTrigger
-from app.core.exceptions import AppError, QuotaExceededError, SyncInProgressError
+from app.core.exceptions import AppError, NotFoundError, QuotaExceededError, SyncInProgressError
 from app.etl.pipeline import PipelineResult, Repositories, SyncPipeline, estimate_requests
 from app.models import SyncRun
 from app.providers.base import FootballDataProvider
@@ -97,13 +97,13 @@ class SyncService:
         if trigger is SyncTrigger.SCHEDULED and (
             reason := self._skip_reason(league_external_id, season)
         ):
-            run = self.sync_runs.record_skipped(trigger, reason)
+            run = self.sync_runs.record_skipped(trigger, reason, league_external_id, season)
             self.session.commit()
             logger.info("Zamanlanmış sync atlandı: %s", reason)
             return run
         self._check_budget(pipeline.estimate_requests(league_external_id, season, full=full))
 
-        run = self.sync_runs.try_start(trigger)
+        run = self.sync_runs.try_start(trigger, league_external_id, season)
         if run is None:
             raise SyncInProgressError("Şu anda çalışan bir senkronizasyon var")
         self.session.commit()  # kilit diğer bağlantılara görünür olsun
@@ -131,7 +131,19 @@ class SyncService:
             self.sync_runs.get_running(), self.sync_runs.list_recent(recent), self._schedule()
         )
 
-    def get_usage(self) -> SyncUsage:
+    def run_manual(
+        self, league_id: int | None = None, season: int | None = None, *, full: bool = False
+    ) -> SyncRun:
+        """Arayüzden tetiklenen sync: ekranda görüntülenen lig (iç id) ve sezon için."""
+        return self.run(
+            SyncTrigger.MANUAL,
+            full=full,
+            league_external_id=self._external_league(league_id),
+            season=season,
+        )
+
+    def get_usage(self, league_id: int | None = None, season: int | None = None) -> SyncUsage:
+        """Günlük kota + verilen lig/sezon için bir sonraki sync'in istek maliyeti."""
         limit = self.settings.api_football_daily_limit
         usage = self.api_usage.get_for_day()
         return SyncUsage(
@@ -142,11 +154,19 @@ class SyncService:
             provider_remaining=usage.remaining if usage else None,
             next_sync_cost=estimate_requests(
                 self.repos,
-                self.settings.default_league_id,
-                self.settings.default_season,
+                self._external_league(league_id) or self.settings.default_league_id,
+                season or self.settings.default_season,
                 full=False,
             ),
         )
+
+    def _external_league(self, league_id: int | None) -> int | None:
+        if league_id is None:
+            return None
+        league = self.repos.leagues.get(league_id)
+        if league is None:
+            raise NotFoundError(f"Lig bulunamadı: {league_id}")
+        return league.external_id
 
     def _schedule(self) -> SyncSchedule:
         enabled = self.settings.scheduler_enabled and bool(self.settings.api_football_key)

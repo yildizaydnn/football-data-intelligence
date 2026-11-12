@@ -75,7 +75,7 @@ export function TopBar({ select, sync }: { select?: ReactNode; sync?: ReactNode 
 function SelectSkeleton() {
   return (
     <div className="flex gap-2.5">
-      <div className="h-[66px] w-52 animate-pulse rounded-xl bg-pitch-800/60" />
+      <div className="h-[66px] w-64 animate-pulse rounded-xl bg-pitch-800/60" />
       <div className="h-[66px] w-28 animate-pulse rounded-xl bg-pitch-800/60" />
     </div>
   );

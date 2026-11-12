@@ -27,8 +27,8 @@ migrate: ## Migration'ları uygula (alembic upgrade head)
 migration: ## Yeni migration üret: make migration m="açıklama"
 	$(BACKEND) uv run alembic revision --autogenerate -m "$(m)"
 
-sync: ## API-Football'dan tam veri yükle (3 istek). Başka sezon: make sync SEASON=2023
-	$(BACKEND) uv run python -m scripts.initial_sync $(if $(SEASON),--season $(SEASON))
+sync: ## API-Football'dan tam veri yükle (3 istek). Örn: make sync LEAGUE=39 SEASON=2023
+	$(BACKEND) uv run python -m scripts.initial_sync $(if $(LEAGUE),--league $(LEAGUE)) $(if $(SEASON),--season $(SEASON))
 
 api-types: ## Backend OpenAPI şemasından frontend TS tiplerini üret
 	$(BACKEND) uv run python -m scripts.export_openapi ../frontend/openapi.json

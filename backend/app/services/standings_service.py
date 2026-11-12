@@ -40,8 +40,11 @@ class StandingsService:
     def get_standings(self, league_id: int, season_year: int | None = None) -> Standings:
         league = self.leagues.get_league(league_id)
         season = self.leagues.resolve_season(league_id, season_year)
-        teams = {t.id: t for t in self.teams.list_by_season(season.id)}
         context = self.rules.resolve(league.external_id, season.year)
+        # Tabloya yalnızca kuraldaki haftalarda (ör. normal sezon) oynayan takımlar girer.
+        teams = {
+            t.id: t for t in self.teams.list_by_season(season.id, context.standings.include_rounds)
+        }
         rules = context.standings_rules({t.external_id: t.id for t in teams.values()})
         rows = calculate_standings(self.fixtures.list_finished(season.id), rules, team_ids=teams)
         entries = [StandingEntry(row, teams[row.team_id]) for row in rows]

@@ -6,6 +6,7 @@ from app.core.enums import MatchStatus
 from app.models import Fixture, League, Season, SyncRun
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.sync_repository import SyncRunRepository
+from app.rules.engine import RuleEngine
 from app.services.league_service import LeagueService
 from app.services.standings_service import StandingEntry, StandingsService
 
@@ -35,11 +36,13 @@ class OverviewService:
         sync_runs: SyncRunRepository,
         leagues: LeagueService,
         standings: StandingsService,
+        rules: RuleEngine,
     ) -> None:
         self.fixtures = fixtures
         self.sync_runs = sync_runs
         self.leagues = leagues
         self.standings = standings
+        self.rules = rules
 
     def get_overview(
         self, league_id: int, season_year: int | None = None, *, now: datetime | None = None
@@ -51,12 +54,15 @@ class OverviewService:
         return Overview(
             league=league,
             season=season,
-            summary=summarize_season(all_fixtures),
+            summary=summarize_season(
+                all_fixtures,
+                self.rules.resolve(league.external_id, season.year).standings.include_rounds,
+            ),
             top_teams=self.standings.get_standings(league_id, season.year).entries[:TOP_TEAMS],
             recent_results=self.fixtures.list_recent_results(season.id, RECENT_RESULTS),
             upcoming=self.fixtures.list_upcoming(
                 season.id, now or datetime.now(UTC), UPCOMING_MATCHES
             ),
             live=[f for f in all_fixtures if f.status is MatchStatus.LIVE],
-            last_sync=self.sync_runs.latest_data_update(),
+            last_sync=self.sync_runs.latest_data_update(league.external_id),
         )

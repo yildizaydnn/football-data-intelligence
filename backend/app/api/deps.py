@@ -24,6 +24,7 @@ from app.rules.engine import RuleEngine, get_rule_engine
 from app.services.fixture_service import FixtureService
 from app.services.league_service import LeagueService
 from app.services.overview_service import OverviewService
+from app.services.rules_service import RulesService
 from app.services.standings_service import StandingsService
 from app.services.sync_service import SyncService
 from app.services.team_stats_service import TeamStatsService
@@ -57,6 +58,13 @@ def get_league_service(session: SessionDep) -> LeagueService:
 LeagueServiceDep = Annotated[LeagueService, Depends(get_league_service)]
 
 
+def get_rules_service(leagues: LeagueServiceDep, rules: RuleEngineDep) -> RulesService:
+    return RulesService(leagues, rules)
+
+
+RulesServiceDep = Annotated[RulesService, Depends(get_rules_service)]
+
+
 def get_fixture_service(session: SessionDep, leagues: LeagueServiceDep) -> FixtureService:
     return FixtureService(FixtureRepository(session), leagues)
 
@@ -77,10 +85,13 @@ StandingsServiceDep = Annotated[StandingsService, Depends(get_standings_service)
 
 
 def get_overview_service(
-    session: SessionDep, leagues: LeagueServiceDep, standings: StandingsServiceDep
+    session: SessionDep,
+    leagues: LeagueServiceDep,
+    standings: StandingsServiceDep,
+    rules: RuleEngineDep,
 ) -> OverviewService:
     return OverviewService(
-        FixtureRepository(session), SyncRunRepository(session), leagues, standings
+        FixtureRepository(session), SyncRunRepository(session), leagues, standings, rules
     )
 
 

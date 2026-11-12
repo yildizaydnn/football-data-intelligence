@@ -7,13 +7,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { FootballIcon } from "@/shared/components/football-icon";
 import { cn } from "@/lib/utils";
 
+import { useDashboardParams } from "@/features/dashboard/hooks";
+
 import { useSyncStatus, useSyncUsage, useTriggerSync } from "./hooks";
 
 /** Kalan API kotası + "Şimdi güncelle". Bütçe yetmiyorsa buton pasif. */
 export function SyncControl() {
-  const usage = useSyncUsage();
+  const { leagueId, season } = useDashboardParams();
+  const usage = useSyncUsage(leagueId, season);
   const status = useSyncStatus();
-  const sync = useTriggerSync();
+  const sync = useTriggerSync(leagueId, season);
 
   const running = sync.isPending || status.running !== null;
   const disabled = running || !usage.can_sync;

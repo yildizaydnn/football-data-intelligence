@@ -32,7 +32,7 @@ export function LeagueSeasonSelect() {
     <div className="flex gap-2.5">
       <SelectField
         label="Lig"
-        className="w-52"
+        className="w-64"
         value={String(leagueId)}
         onChange={switchLeague}
         options={leagues.map((l) => ({
@@ -52,5 +52,11 @@ export function LeagueSeasonSelect() {
   );
 }
 
-const COUNTRY_TR: Record<string, string> = { Turkey: "Türkiye", England: "İngiltere", Spain: "İspanya" };
+const COUNTRY_TR: Record<string, string> = {
+  Turkey: "Türkiye",
+  England: "İngiltere",
+  Spain: "İspanya",
+  Germany: "Almanya",
+  Italy: "İtalya",
+};
 const countryTr = (country: string) => COUNTRY_TR[country] ?? country;

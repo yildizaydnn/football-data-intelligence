@@ -55,6 +55,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/leagues/{league_id}/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get League Rules
+         * @description Lig + sezon için geçerli kurallar: puanlar, sıralama kriterleri, tablo bölgeleri.
+         */
+        get: operations["get_league_rules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/leagues/{league_id}/teams": {
         parameters: {
             query?: never;
@@ -203,7 +223,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Sync Usage */
+        /**
+         * Get Sync Usage
+         * @description Kalan kota; `next_sync_cost` verilen lig/sezon için (boşsa varsayılan lig).
+         */
         get: operations["get_sync_usage"];
         put?: never;
         post?: never;
@@ -368,6 +391,15 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** PointsOut */
+        PointsOut: {
+            /** Win */
+            win: number;
+            /** Draw */
+            draw: number;
+            /** Loss */
+            loss: number;
+        };
         /** RoundGoalsOut */
         RoundGoalsOut: {
             /** Round */
@@ -378,6 +410,33 @@ export interface components {
             matches: number;
             /** Goals */
             goals: number;
+        };
+        /**
+         * RulesOut
+         * @description Bir lig + sezon için geçerli kurallar (rules spec katmanından).
+         */
+        RulesOut: {
+            /** League External Id */
+            league_external_id: number | null;
+            /** Season */
+            season: number | null;
+            /** Name */
+            name: string;
+            /** Verified */
+            verified: boolean;
+            /** Sources */
+            sources: string[];
+            /** Notes */
+            notes: string | null;
+            points: components["schemas"]["PointsOut"];
+            /** Tiebreakers */
+            tiebreakers: string[];
+            /** Head To Head Requires All Matches */
+            head_to_head_requires_all_matches: boolean;
+            /** Include Rounds */
+            include_rounds: string | null;
+            /** Zones */
+            zones: components["schemas"]["ZoneOut"][];
         };
         /** SeasonOut */
         SeasonOut: {
@@ -483,8 +542,11 @@ export interface components {
             goal_difference: number;
             /** Points */
             points: number;
+            /** Deduction */
+            deduction: number;
             /** Form */
             form: components["schemas"]["MatchResult"][];
+            zone?: components["schemas"]["ZoneOut"] | null;
         };
         /** StandingsOut */
         StandingsOut: {
@@ -492,6 +554,7 @@ export interface components {
             season: number;
             /** Rows */
             rows: components["schemas"]["StandingRowOut"][];
+            rules: components["schemas"]["RulesOut"];
         };
         /** StreakOut */
         StreakOut: {
@@ -501,6 +564,10 @@ export interface components {
         };
         /** SyncRequest */
         SyncRequest: {
+            /** League Id */
+            league_id?: number | null;
+            /** Season */
+            season?: number | null;
             /**
              * Full
              * @default false
@@ -513,6 +580,10 @@ export interface components {
             id: number;
             trigger: components["schemas"]["SyncTrigger"];
             status: components["schemas"]["SyncStatus"];
+            /** League External Id */
+            league_external_id: number | null;
+            /** Season */
+            season: number | null;
             /**
              * Started At
              * Format: date-time
@@ -651,6 +722,21 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /**
+         * ZoneKind
+         * @enum {string}
+         */
+        ZoneKind: "champions_league" | "europa_league" | "conference_league" | "relegation_playoff" | "relegation";
+        /** ZoneOut */
+        ZoneOut: {
+            /** From Position */
+            from_position: number;
+            /** To Position */
+            to_position: number;
+            kind: components["schemas"]["ZoneKind"];
+            /** Label */
+            label: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -738,6 +824,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeasonOut"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_league_rules: {
+        parameters: {
+            query?: {
+                /** @description Sezon yılı; boşsa ligin güncel sezonu */
+                season?: number | null;
+            };
+            header?: never;
+            path: {
+                league_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesOut"];
                 };
             };
             /** @description Not Found */
@@ -1110,7 +1239,11 @@ export interface operations {
     };
     get_sync_usage: {
         parameters: {
-            query?: never;
+            query?: {
+                league_id?: number | null;
+                /** @description Sezon yılı; boşsa ligin güncel sezonu */
+                season?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1124,6 +1257,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncUsageOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

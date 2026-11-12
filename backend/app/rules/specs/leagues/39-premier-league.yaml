@@ -1,0 +1,28 @@
+league: 39 # API-Football: Premier League (İngiltere)
+
+meta:
+  name: Premier League
+  sources:
+    - Premier League Handbook, Section C (League Table)
+  verified: false
+  notes: >
+    Değerler genel bilgiyle yazıldı, resmi el kitabıyla karşılaştırılmalı.
+    Avrupa Ligi/Konferans Ligi kontenjanları kupa sonuçlarına göre değiştiği için tanımlı değil.
+
+standings:
+  # Puan eşitliğinde önce genel averaj ve atılan gol; ikili kriterler sonra gelir.
+  tiebreakers: [points, goal_difference, goals_for, h2h_points, h2h_away_goals_for]
+  head_to_head:
+    requires_all_matches: false
+
+zones:
+  - { from: 1, to: 4, kind: champions_league, label: Şampiyonlar Ligi }
+  - { from: -3, to: -1, kind: relegation, label: Küme düşme }
+
+seasons:
+  2023:
+    standings:
+      # Finansal kurallar (PSR) ihlali cezaları; takım API id'si → silinen puan.
+      deductions:
+        45: 8 # Everton (önce 10, itirazla 6; ardından ayrıca 2)
+        65: 4 # Nottingham Forest

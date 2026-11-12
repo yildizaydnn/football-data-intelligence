@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { FootballIcon } from "@/shared/components/football-icon";
 import { LiveDot } from "@/shared/components/status-badge";
 import { formatDateTime, formatDay, formatSeason, formatTime } from "@/shared/lib/format";
+import { nameLang } from "@/shared/lib/locale";
 
 import { useDashboardParams } from "./hooks";
 
@@ -102,6 +103,7 @@ export function Hero({ compact }: { compact: boolean }) {
             {round ? ` · ${round}. Hafta` : ""}
           </p>
           <h1
+            lang={nameLang(overview.league.country)}
             className={cn(
               "font-display font-extrabold uppercase leading-[0.9] text-white drop-shadow-[0_4px_12px_rgb(0_0_0/25%)]",
               compact ? "mt-1 text-5xl" : "mt-2 text-6xl sm:text-8xl",

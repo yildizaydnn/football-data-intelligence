@@ -149,7 +149,11 @@ class TestOverviewService:
         standings: StandingsService,
     ) -> None:
         service = OverviewService(
-            FixtureRepository(db_session), SyncRunRepository(db_session), leagues, standings
+            FixtureRepository(db_session),
+            SyncRunRepository(db_session),
+            leagues,
+            standings,
+            get_rule_engine(),
         )
 
         overview = service.get_overview(league.id, now=datetime(2024, 10, 1, tzinfo=UTC))

@@ -14,9 +14,8 @@ import { useFlip } from "@/shared/hooks/use-flip";
 import { formatSeason, formatSigned } from "@/shared/lib/format";
 
 import { useStandings } from "./hooks";
+import { legendZones, tiebreakSentence, ZONE_STYLE } from "./rules-labels";
 
-const TOP = 4;
-const BOTTOM = 3;
 
 export function StandingsTable() {
   const router = useRouter();
@@ -72,7 +71,7 @@ export function StandingsTable() {
                 aria-label={`${row.position}. ${row.team.name}, ${row.points} puan — takım analizine git`}
               >
                 <td className="py-3 pl-5 sm:pl-6">
-                  <RankBadge position={row.position} total={rows.length} />
+                  <RankBadge row={row} />
                 </td>
                 <td className="py-3">
                   <span className="flex items-center gap-2.5 font-semibold">
@@ -100,35 +99,44 @@ export function StandingsTable() {
                 </td>
                 <td className="font-display tabular py-3 pr-5 text-center text-2xl font-extrabold sm:pr-6">
                   {row.points}
+                  {row.deduction > 0 && (
+                    <sup className="ml-0.5 font-sans text-[10px] font-semibold text-loss" title={`${row.deduction} puan silindi`}>
+                      −{row.deduction}
+                    </sup>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <footer className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t px-5 py-4 text-xs text-sage sm:px-6">
-        <Legend className="bg-lime" label="Lider" />
-        <Legend className="bg-pitch-500" label={`İlk ${TOP}`} />
-        <Legend className="bg-loss/70" label={`Son ${BOTTOM}`} />
-        <span>O: oynanan · G: galibiyet · B: beraberlik · M: mağlubiyet · Av: averaj · P: puan</span>
-        <span>Puan eşitliğinde: ikili puan → ikili averaj → genel averaj → atılan gol</span>
+      <footer className="space-y-2 border-t px-5 py-4 text-xs text-sage sm:px-6">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {legendZones(standings.rules).map((zone) => (
+            <Legend key={zone.label} className={ZONE_STYLE[zone.kind].swatch} label={zone.label} />
+          ))}
+          <span>O: oynanan · G: galibiyet · B: beraberlik · M: mağlubiyet · Av: averaj · P: puan</span>
+        </div>
+        <p>
+          {tiebreakSentence(standings.rules)}.{" "}
+          <span className="text-moss">
+            Kurallar: {standings.rules.name}
+            {!standings.rules.verified && " (resmi yönetmelikle henüz doğrulanmadı)"}
+          </span>
+        </p>
       </footer>
     </Panel>
   );
 }
 
-function RankBadge({ position, total }: { position: number; total: number }) {
-  const style =
-    position === 1
-      ? "bg-lime text-pitch-900"
-      : position <= TOP
-        ? "bg-pitch-500 text-chalk"
-        : position > total - BOTTOM
-          ? "bg-loss/25 text-[#ffb3a8]"
-          : "bg-white/6 text-chalk";
+function RankBadge({ row }: { row: StandingRow }) {
+  const style = row.zone ? ZONE_STYLE[row.zone.kind].badge : "bg-white/6 text-chalk";
   return (
-    <span className={cn("tabular grid size-7 place-items-center rounded-lg text-[13px] font-bold", style)}>
-      {position}
+    <span
+      title={row.zone?.label}
+      className={cn("tabular grid size-7 place-items-center rounded-lg text-[13px] font-bold", style)}
+    >
+      {row.position}
     </span>
   );
 }

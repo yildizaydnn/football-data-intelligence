@@ -76,3 +76,17 @@ def test_empty_season() -> None:
     assert summary.home_win_rate == 0.0
     assert summary.goals_by_round == []
     assert summary.current_round is None
+
+
+def test_round_pattern_limits_summary_to_league_rounds() -> None:
+    summary = summarize_season(
+        [
+            _with(match(1, 2, "2-1", week=1), MatchStatus.FINISHED, "Regular Season - 34"),
+            _with(match(3, 4, "1-0", week=2), MatchStatus.FINISHED, "Relegation Round"),
+        ],
+        round_pattern="^Regular Season",
+    )
+
+    assert summary.total_matches == 1
+    assert summary.total_goals == 3
+    assert summary.current_round.number == 34

@@ -62,9 +62,16 @@ class SeasonSummary:
         return self.away_wins / self.finished if self.finished else 0.0
 
 
-def summarize_season(matches: Iterable[StatusMatchLike]) -> SeasonSummary:
-    """Gol ve sonuç dağılımı yalnızca bitmiş maçlardan; canlı maçların anlık skoru sayılmaz."""
-    matches = list(matches)
+def summarize_season(
+    matches: Iterable[StatusMatchLike], round_pattern: str | None = None
+) -> SeasonSummary:
+    """Gol ve sonuç dağılımı yalnızca bitmiş maçlardan; canlı maçların anlık skoru sayılmaz.
+
+    `round_pattern` (lig kuralından) verilirse yalnızca eşleşen haftalar sayılır; puan
+    tablosuyla aynı kapsam (ör. küme düşme play-off'u özete girmez).
+    """
+    pattern = re.compile(round_pattern) if round_pattern else None
+    matches = [m for m in matches if pattern is None or pattern.search(m.round or "")]
     statuses = Counter(m.status for m in matches)
     summary = SeasonSummary(
         total_matches=len(matches),

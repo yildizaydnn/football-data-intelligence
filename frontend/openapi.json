@@ -138,6 +138,79 @@
         }
       }
     },
+    "/api/v1/leagues/{league_id}/rules": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get League Rules",
+        "description": "Lig + sezon için geçerli kurallar: puanlar, sıralama kriterleri, tablo bölgeleri.",
+        "operationId": "get_league_rules",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulesOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/leagues/{league_id}/teams": {
       "get": {
         "tags": [
@@ -791,7 +864,46 @@
           "sync"
         ],
         "summary": "Get Sync Usage",
+        "description": "Kalan kota; `next_sync_cost` verilen lig/sezon için (boşsa varsayılan lig).",
         "operationId": "get_sync_usage",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa ligin güncel sezonu",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa ligin güncel sezonu"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -799,6 +911,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncUsageOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1271,6 +1403,29 @@
         ],
         "title": "Paginated[FixtureOut]"
       },
+      "PointsOut": {
+        "properties": {
+          "win": {
+            "type": "integer",
+            "title": "Win"
+          },
+          "draw": {
+            "type": "integer",
+            "title": "Draw"
+          },
+          "loss": {
+            "type": "integer",
+            "title": "Loss"
+          }
+        },
+        "type": "object",
+        "required": [
+          "win",
+          "draw",
+          "loss"
+        ],
+        "title": "PointsOut"
+      },
       "RoundGoalsOut": {
         "properties": {
           "round": {
@@ -1305,6 +1460,106 @@
           "goals"
         ],
         "title": "RoundGoalsOut"
+      },
+      "RulesOut": {
+        "properties": {
+          "league_external_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "League External Id"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "points": {
+            "$ref": "#/components/schemas/PointsOut"
+          },
+          "tiebreakers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tiebreakers"
+          },
+          "head_to_head_requires_all_matches": {
+            "type": "boolean",
+            "title": "Head To Head Requires All Matches"
+          },
+          "include_rounds": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include Rounds"
+          },
+          "zones": {
+            "items": {
+              "$ref": "#/components/schemas/ZoneOut"
+            },
+            "type": "array",
+            "title": "Zones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "league_external_id",
+          "season",
+          "name",
+          "verified",
+          "sources",
+          "notes",
+          "points",
+          "tiebreakers",
+          "head_to_head_requires_all_matches",
+          "include_rounds",
+          "zones"
+        ],
+        "title": "RulesOut",
+        "description": "Bir lig + sezon için geçerli kurallar (rules spec katmanından)."
       },
       "SeasonOut": {
         "properties": {
@@ -1580,12 +1835,26 @@
             "type": "integer",
             "title": "Points"
           },
+          "deduction": {
+            "type": "integer",
+            "title": "Deduction"
+          },
           "form": {
             "items": {
               "$ref": "#/components/schemas/MatchResult"
             },
             "type": "array",
             "title": "Form"
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ZoneOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -1600,6 +1869,7 @@
           "goals_against",
           "goal_difference",
           "points",
+          "deduction",
           "form"
         ],
         "title": "StandingRowOut"
@@ -1616,12 +1886,16 @@
             },
             "type": "array",
             "title": "Rows"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/RulesOut"
           }
         },
         "type": "object",
         "required": [
           "season",
-          "rows"
+          "rows",
+          "rules"
         ],
         "title": "StandingsOut"
       },
@@ -1644,6 +1918,28 @@
       },
       "SyncRequest": {
         "properties": {
+          "league_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "League Id"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          },
           "full": {
             "type": "boolean",
             "title": "Full",
@@ -1664,6 +1960,28 @@
           },
           "status": {
             "$ref": "#/components/schemas/SyncStatus"
+          },
+          "league_external_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "League External Id"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
           },
           "started_at": {
             "type": "string",
@@ -1715,6 +2033,8 @@
           "id",
           "trigger",
           "status",
+          "league_external_id",
+          "season",
           "started_at",
           "finished_at",
           "requests_made",
@@ -2097,6 +2417,44 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "ZoneKind": {
+        "type": "string",
+        "enum": [
+          "champions_league",
+          "europa_league",
+          "conference_league",
+          "relegation_playoff",
+          "relegation"
+        ],
+        "title": "ZoneKind"
+      },
+      "ZoneOut": {
+        "properties": {
+          "from_position": {
+            "type": "integer",
+            "title": "From Position"
+          },
+          "to_position": {
+            "type": "integer",
+            "title": "To Position"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ZoneKind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_position",
+          "to_position",
+          "kind",
+          "label"
+        ],
+        "title": "ZoneOut"
       }
     }
   }

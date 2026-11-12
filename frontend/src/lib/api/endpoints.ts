@@ -85,7 +85,16 @@ export const endpoints = {
 
   syncStatus: () => unwrap(api.GET("/api/v1/sync/status")),
 
-  syncUsage: () => unwrap(api.GET("/api/v1/sync/usage")),
+  rules: ({ leagueId, season }: LeagueScope) =>
+    unwrap(
+      api.GET("/api/v1/leagues/{league_id}/rules", {
+        params: { path: { league_id: leagueId }, query: { season } },
+      }),
+    ),
 
-  triggerSync: (full = false) => unwrap(api.POST("/api/v1/sync", { body: { full } })),
+  syncUsage: ({ leagueId, season }: LeagueScope) =>
+    unwrap(api.GET("/api/v1/sync/usage", { params: { query: { league_id: leagueId, season } } })),
+
+  triggerSync: ({ leagueId, season, full = false }: LeagueScope & { full?: boolean }) =>
+    unwrap(api.POST("/api/v1/sync", { body: { league_id: leagueId, season, full } })),
 };

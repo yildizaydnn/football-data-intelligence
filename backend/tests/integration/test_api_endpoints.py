@@ -227,3 +227,46 @@ class TestSyncToken:
 
     def test_read_endpoints_stay_public(self, protected: TestClient) -> None:
         assert protected.get("/api/v1/sync/usage").status_code == 200
+
+
+class TestMultiLeagueAndRules:
+    def test_manual_sync_targets_given_league_and_season(
+        self, client: TestClient, league_id: int
+    ) -> None:
+        run = client.post("/api/v1/sync", json={"league_id": league_id, "season": 2024}).json()
+
+        assert (run["league_external_id"], run["season"]) == (203, 2024)
+        assert run["requests_made"] == 1  # lig zaten yüklü: sadece maçlar
+
+    def test_usage_cost_depends_on_league_and_season(
+        self, client: TestClient, league_id: int
+    ) -> None:
+        loaded = client.get("/api/v1/sync/usage", params={"league_id": league_id}).json()
+        new_season = client.get(
+            "/api/v1/sync/usage", params={"league_id": league_id, "season": 2021}
+        ).json()
+
+        assert loaded["next_sync_cost"] == 1
+        assert new_season["next_sync_cost"] == 3  # sezon yok: referans veri de çekilir
+
+    def test_unknown_league_in_sync_request_is_404(self, client: TestClient) -> None:
+        assert client.post("/api/v1/sync", json={"league_id": 9999}).status_code == 404
+
+    def test_rules_endpoint_reflects_league_spec(self, client: TestClient, league_id: int) -> None:
+        rules = client.get(f"/api/v1/leagues/{league_id}/rules").json()
+
+        assert rules["name"] == "Süper Lig"
+        assert rules["league_external_id"] == 203
+        assert rules["tiebreakers"][:2] == ["points", "h2h_points"]
+        assert rules["points"] == {"win": 3, "draw": 1, "loss": 0}
+        assert rules["verified"] is False
+
+    def test_standings_rows_carry_zones_from_rules(
+        self, client: TestClient, league_id: int
+    ) -> None:
+        body = client.get(f"/api/v1/leagues/{league_id}/standings").json()
+
+        zones = {row["position"]: row["zone"] for row in body["rows"]}
+        assert zones[1]["kind"] == "champions_league"
+        assert body["rules"]["name"] == "Süper Lig"
+        assert all("deduction" in row for row in body["rows"])

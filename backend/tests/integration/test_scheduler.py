@@ -67,18 +67,29 @@ class TestScheduledSyncJob:
         )
 
     def test_creates_scheduled_run(self, db_session: Session, provider: FakeProvider) -> None:
-        run = self._run(db_session, provider)
+        [run] = self._run(db_session, provider)
 
-        assert run is not None
         assert run.trigger is SyncTrigger.SCHEDULED
         assert run.status is SyncStatus.PARTIAL
+        assert (run.league_external_id, run.season) == (203, 2024)
+
+    def test_each_tracked_league_is_synced_independently(
+        self, db_session: Session, provider: FakeProvider, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # FakeProvider yalnızca 203'ü tanır: 39 için lig bulunamaz ama 203 yine çalışır.
+        runs = self._run(db_session, provider, tracked_leagues=[39, 203])
+
+        assert [(r.league_external_id, r.status) for r in runs] == [
+            (39, SyncStatus.FAILED),
+            (203, SyncStatus.PARTIAL),
+        ]
 
     def test_quota_exceeded_is_logged_not_raised(
         self, db_session: Session, provider: FakeProvider, caplog: pytest.LogCaptureFixture
     ) -> None:
         ApiUsageRepository(db_session).record(100, daily_limit=100)
 
-        assert self._run(db_session, provider) is None
+        assert self._run(db_session, provider) == []
         assert provider.calls == []
         assert "Günlük API bütçesi yetersiz" in caplog.text
 
@@ -87,7 +98,7 @@ class TestScheduledSyncJob:
     ) -> None:
         SyncRunRepository(db_session).try_start(SyncTrigger.MANUAL)
 
-        assert self._run(db_session, provider) is None
+        assert self._run(db_session, provider) == []
         assert "çalışan bir senkronizasyon" in caplog.text
 
     def test_unexpected_error_is_logged_not_raised(
@@ -102,5 +113,5 @@ class TestScheduledSyncJob:
             settings=_settings(),
         )
 
-        assert result is None
+        assert result == []
         assert "beklenmeyen hata" in caplog.text

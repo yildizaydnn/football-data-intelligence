@@ -1,10 +1,11 @@
 "use client";
 
+import { useLeagues } from "@/features/dashboard/hooks";
 import type { SyncRun } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Panel, PanelHeader } from "@/shared/components/panel";
 import { EmptyState } from "@/shared/components/states";
-import { dayKey, formatDay, formatTime } from "@/shared/lib/format";
+import { dayKey, formatDay, formatSeason, formatTime } from "@/shared/lib/format";
 
 import { useSyncStatus } from "./hooks";
 import { RUN_LABEL, TRIGGER_LABEL } from "./labels";
@@ -13,6 +14,14 @@ const VISIBLE = 5;
 
 export function SyncHistory() {
   const { recent } = useSyncStatus();
+  const leagueNames = new Map(useLeagues().map((l) => [l.external_id, l.name]));
+  const scope = (run: SyncRun) =>
+    [
+      run.league_external_id && leagueNames.get(run.league_external_id),
+      run.season && formatSeason(run.season),
+    ]
+      .filter(Boolean)
+      .join(" ");
   return (
     <Panel className="animate-fade-up">
       <PanelHeader title="Senkronizasyon geçmişi" />
@@ -34,6 +43,7 @@ export function SyncHistory() {
                     {when(run.started_at)}
                   </time>
                 </div>
+                {scope(run) && <p className="text-xs font-medium text-mist">{scope(run)}</p>}
                 <p className="mt-0.5 text-sm text-sage">{detail(run)}</p>
               </div>
             </li>

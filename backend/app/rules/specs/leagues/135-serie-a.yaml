@@ -1,0 +1,24 @@
+league: 135 # API-Football: Serie A (İtalya)
+
+meta:
+  name: Serie A
+  sources:
+    - Lega Serie A / FIGC NOIF, classifica a parità di punti
+  verified: false
+  notes: >
+    Değerler genel bilgiyle yazıldı, resmi yönetmelikle karşılaştırılmalı.
+    Şampiyonluk veya küme düşmede puan eşitliği play-off maçıyla çözülebilir; o maç
+    normal sezon haftası olmadığı için tabloya girmez (include_rounds).
+
+standings:
+  tiebreakers: [points, h2h_points, h2h_goal_difference, goal_difference, goals_for]
+
+zones:
+  - { from: 1, to: 4, kind: champions_league, label: Şampiyonlar Ligi }
+  - { from: -3, to: -1, kind: relegation, label: Küme düşme }
+
+seasons:
+  2022:
+    standings:
+      deductions:
+        496: 10 # Juventus (transfer bedelleri soruşturması)

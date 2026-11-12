@@ -1,0 +1,20 @@
+league: 78 # API-Football: Bundesliga (Almanya)
+
+meta:
+  name: Bundesliga
+  sources:
+    - DFL Spielordnung, Tabellenplatz bei Punktgleichheit
+  verified: false
+  notes: >
+    Değerler genel bilgiyle yazıldı, resmi yönetmelikle karşılaştırılmalı.
+    16. sıradaki takım 2. Bundesliga'nın 3.'süyle küme düşme play-off'u oynar.
+
+standings:
+  tiebreakers: [points, goal_difference, goals_for, h2h_points, h2h_away_goals_for, away_goals_for]
+  head_to_head:
+    requires_all_matches: false
+
+zones:
+  - { from: 1, to: 4, kind: champions_league, label: Şampiyonlar Ligi }
+  - { from: -3, to: -3, kind: relegation_playoff, label: Küme düşme play-off }
+  - { from: -2, to: -1, kind: relegation, label: Küme düşme }

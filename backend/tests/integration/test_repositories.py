@@ -157,3 +157,32 @@ def test_run_timestamps_are_readable_after_session_closes(db_session: Session) -
 
     assert finished.finished_at is not None and finished.started_at is not None
     assert skipped.finished_at is not None
+
+
+def test_teams_by_season_can_be_limited_to_rounds(db_session: Session, seed: Seed) -> None:
+    playoff_team = Team(external_id=777, name="Alt Lig Takımı")
+    db_session.add(playoff_team)
+    db_session.flush()
+    FixtureRepository(db_session).upsert(
+        [
+            seed.fixture_item(1, round="Regular Season - 1"),
+            seed.fixture_item(2, home_team_id=playoff_team.id, round="Relegation Round"),
+        ]
+    )
+    repo = TeamRepository(db_session)
+
+    assert len(repo.list_by_season(seed.season.id)) == 3
+    regular = repo.list_by_season(seed.season.id, "^Regular Season")
+    assert {t.name for t in regular} == {"Galatasaray", "Fenerbahçe"}
+
+
+def test_latest_data_update_per_league(db_session: Session) -> None:
+    repo = SyncRunRepository(db_session)
+    super_lig = repo.try_start(SyncTrigger.MANUAL, 203, 2024)
+    repo.finish(super_lig, SyncStatus.SUCCESS)
+    premier = repo.try_start(SyncTrigger.MANUAL, 39, 2024)
+    repo.finish(premier, SyncStatus.SUCCESS)
+
+    assert repo.latest_data_update(203) == super_lig
+    assert repo.latest_data_update(39) == premier
+    assert repo.latest_data_update(78) is None

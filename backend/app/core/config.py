@@ -22,8 +22,11 @@ class Settings(BaseSettings):
     api_football_timeout_seconds: float = 10.0
     api_football_max_attempts: int = 3
 
-    default_league_id: int = 203  # Süper Lig
+    default_league_id: int = 203  # Süper Lig; parametresiz sync ve CLI için
     default_season: int = 2024
+    # Zamanlanmış sync'in takip ettiği ligler (API id'leri). Her biri default_season için
+    # ayrı sync olarak, kota kontrolüyle çalışır. Kuralları rules/specs/leagues altında.
+    tracked_leagues: list[int] = [203]
 
     cors_origins: list[str] = ["http://localhost:3000"]
     scheduler_enabled: bool = False

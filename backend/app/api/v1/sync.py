@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.api.deps import SyncServiceDep, SyncStatusServiceDep, require_sync_token
-from app.api.v1.common import error_responses
-from app.core.enums import SyncTrigger
+from app.api.v1.common import SeasonQuery, error_responses
 from app.schemas.sync import SyncRequest, SyncRunOut, SyncStateOut, SyncUsageOut
 
 router = APIRouter(prefix="/sync", tags=["sync"])
@@ -19,7 +18,8 @@ def trigger_sync(service: SyncServiceDep, body: SyncRequest | None = None) -> Sy
 
     Sync başladıktan sonraki hatalar 200 + status=failed olarak döner (kayıt oluşmuştur).
     """
-    run = service.run(SyncTrigger.MANUAL, full=body.full if body else False)
+    body = body or SyncRequest()
+    run = service.run_manual(body.league_id, body.season, full=body.full)
     return SyncRunOut.model_validate(run)
 
 
@@ -28,6 +28,9 @@ def get_sync_status(service: SyncStatusServiceDep) -> SyncStateOut:
     return SyncStateOut.model_validate(service.get_state())
 
 
-@router.get("/usage", response_model=SyncUsageOut)
-def get_sync_usage(service: SyncStatusServiceDep) -> SyncUsageOut:
-    return SyncUsageOut.model_validate(service.get_usage())
+@router.get("/usage", response_model=SyncUsageOut, responses=error_responses(404))
+def get_sync_usage(
+    service: SyncStatusServiceDep, league_id: int | None = None, season: SeasonQuery = None
+) -> SyncUsageOut:
+    """Kalan kota; `next_sync_cost` verilen lig/sezon için (boşsa varsayılan lig)."""
+    return SyncUsageOut.model_validate(service.get_usage(league_id, season))

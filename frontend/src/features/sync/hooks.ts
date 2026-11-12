@@ -11,20 +11,26 @@ import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 
-export const syncUsageQuery = () =>
-  queryOptions({ queryKey: ["sync", "usage"], queryFn: endpoints.syncUsage, staleTime: 15_000 });
+/** Kalan kota + seçili lig/sezon için bir sonraki güncellemenin istek maliyeti. */
+export const syncUsageQuery = (leagueId: number, season?: number) =>
+  queryOptions({
+    queryKey: ["sync", "usage", leagueId, season ?? "default"],
+    queryFn: () => endpoints.syncUsage({ leagueId, season }),
+    staleTime: 15_000,
+  });
 
 export const syncStatusQuery = () =>
   queryOptions({ queryKey: ["sync", "status"], queryFn: endpoints.syncStatus, staleTime: 15_000 });
 
-export const useSyncUsage = () => useSuspenseQuery(syncUsageQuery()).data;
+export const useSyncUsage = (leagueId: number, season?: number) =>
+  useSuspenseQuery(syncUsageQuery(leagueId, season)).data;
 export const useSyncStatus = () => useSuspenseQuery(syncStatusQuery()).data;
 
-/** Elle güncelleme. Bitince tüm ekranların verisi tazelenir. */
-export function useTriggerSync() {
+/** Elle güncelleme: ekranda görüntülenen lig ve sezon için. Bitince tüm ekranlar tazelenir. */
+export function useTriggerSync(leagueId: number, season?: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => endpoints.triggerSync(false),
+    mutationFn: () => endpoints.triggerSync({ leagueId, season }),
     onSuccess: (run) => {
       if (run.status === "failed") {
         toast.error("Güncelleme başarısız", { description: run.error_message ?? undefined });

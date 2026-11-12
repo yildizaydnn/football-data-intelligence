@@ -7,6 +7,8 @@ from app.schemas.common import Schema
 
 
 class SyncRequest(BaseModel):
+    league_id: int | None = None  # boşsa varsayılan lig (DEFAULT_LEAGUE_ID)
+    season: int | None = None  # boşsa varsayılan sezon
     full: bool = False  # True: lig/sezon/takımlar da yenilenir (3 istek), False: sadece maçlar (1)
 
 
@@ -14,6 +16,8 @@ class SyncRunOut(Schema):
     id: int
     trigger: SyncTrigger
     status: SyncStatus
+    league_external_id: int | None
+    season: int | None
     started_at: datetime
     finished_at: datetime | None
     requests_made: int

@@ -1,0 +1,17 @@
+league: 140 # API-Football: La Liga (İspanya)
+
+meta:
+  name: La Liga
+  sources:
+    - RFEF Reglamento General, puan eşitliği maddeleri
+  verified: false
+  notes: >
+    Değerler genel bilgiyle yazıldı, resmi yönetmelikle karşılaştırılmalı.
+    İkili kriterler yalnızca karşılıklı iki maç da oynandıysa uygulanır.
+
+standings:
+  tiebreakers: [points, h2h_points, h2h_goal_difference, goal_difference, goals_for]
+
+zones:
+  - { from: 1, to: 4, kind: champions_league, label: Şampiyonlar Ligi }
+  - { from: -3, to: -1, kind: relegation, label: Küme düşme }
