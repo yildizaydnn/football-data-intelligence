@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 
-import { ComingSoon } from "@/shared/components/coming-soon";
+import { TeamAnalysisSkeleton, TeamAnalysisView } from "@/features/teams/team-analysis-view";
+import { QueryBoundary } from "@/shared/components/query-boundary";
 
 export const metadata: Metadata = { title: "Takım Analizi" };
 
 export default function TeamPage() {
-  return <ComingSoon title="Takım Analizi" />;
+  return (
+    <QueryBoundary fallback={<TeamAnalysisSkeleton />}>
+      <TeamAnalysisView />
+    </QueryBoundary>
+  );
 }

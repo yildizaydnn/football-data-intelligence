@@ -308,3 +308,13 @@
     animation: none !important;
   }
 }
+
+/* Galibiyet oranı halkası: çevreden hedef değere dolar (hedef inline style ile verilir). */
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-circumference);
+  }
+}
+@utility animate-ring {
+  animation: ring-fill 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
