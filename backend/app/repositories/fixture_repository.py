@@ -51,6 +51,30 @@ class FixtureRepository(BaseRepository[Fixture]):
         filters = self._filters(season_id, MatchStatus.FINISHED, team_id, None, None)
         return self.list(*filters, order_by=[Fixture.kickoff_at, Fixture.id])
 
+    def list_recent_results(self, season_id: int, limit: int) -> list[Fixture]:
+        stmt = (
+            select(Fixture)
+            .options(joinedload(Fixture.home_team), joinedload(Fixture.away_team))
+            .where(Fixture.season_id == season_id, Fixture.status == MatchStatus.FINISHED)
+            .order_by(Fixture.kickoff_at.desc(), Fixture.id.desc())
+            .limit(limit)
+        )
+        return list(self.session.scalars(stmt))
+
+    def list_upcoming(self, season_id: int, after: datetime, limit: int) -> list[Fixture]:
+        stmt = (
+            select(Fixture)
+            .options(joinedload(Fixture.home_team), joinedload(Fixture.away_team))
+            .where(
+                Fixture.season_id == season_id,
+                Fixture.status == MatchStatus.SCHEDULED,
+                Fixture.kickoff_at >= after,
+            )
+            .order_by(Fixture.kickoff_at, Fixture.id)
+            .limit(limit)
+        )
+        return list(self.session.scalars(stmt))
+
     def list_changes(self, fixture_id: int) -> list[FixtureChange]:
         stmt = (
             select(FixtureChange)

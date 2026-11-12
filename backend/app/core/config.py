@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000"]
     scheduler_enabled: bool = False
+    sync_stale_after_minutes: int = 30  # bu süreden uzun RUNNING kalan sync çökmüş sayılır
 
 
 @lru_cache

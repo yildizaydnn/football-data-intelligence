@@ -35,3 +35,12 @@ class QuotaExceededError(AppError):
     def __init__(self, message: str, *, requests_made: int = 0) -> None:
         super().__init__(message)
         self.requests_made = requests_made
+
+
+class ConflictError(AppError):
+    status_code = 409
+    code = "conflict"
+
+
+class SyncInProgressError(ConflictError):
+    code = "sync_in_progress"
