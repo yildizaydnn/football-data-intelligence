@@ -1,4 +1,4 @@
-.PHONY: help install db-up db-down dev lint format test
+.PHONY: help install db-up db-down dev migrate migration lint format test
 
 BACKEND := cd backend &&
 
@@ -16,6 +16,12 @@ db-down: ## Container'ları durdur
 
 dev: ## Backend'i geliştirme modunda çalıştır
 	$(BACKEND) uv run uvicorn app.main:app --reload
+
+migrate: ## Migration'ları uygula (alembic upgrade head)
+	$(BACKEND) uv run alembic upgrade head
+
+migration: ## Yeni migration üret: make migration m="açıklama"
+	$(BACKEND) uv run alembic revision --autogenerate -m "$(m)"
 
 lint: ## Ruff ile lint + format kontrolü
 	$(BACKEND) uv run ruff check . && uv run ruff format --check .

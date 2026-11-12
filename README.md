@@ -11,7 +11,8 @@ API-Football verisini toplayan, işleyen ve analiz eden full-stack platform.
 ```bash
 cp .env.example .env      # API_FOOTBALL_KEY değerini doldur
 make install              # backend bağımlılıkları
-make db-up                # PostgreSQL
+make db-up                # PostgreSQL (localhost:5433)
+make migrate              # tabloları oluştur
 make dev                  # http://localhost:8000/docs
 ```
 
