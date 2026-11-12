@@ -7,6 +7,13 @@ from app.schemas.sync import SyncRunOut
 from app.services.overview_service import Overview
 
 
+class RoundGoalsOut(Schema):
+    round: str
+    number: int | None
+    matches: int
+    goals: int
+
+
 class SeasonSummaryOut(Schema):
     total_matches: int
     by_status: dict[MatchStatus, int]
@@ -19,6 +26,8 @@ class SeasonSummaryOut(Schema):
     home_win_rate: float
     draw_rate: float
     away_win_rate: float
+    goals_by_round: list[RoundGoalsOut]
+    current_round: RoundGoalsOut | None
 
 
 class OverviewOut(Schema):
@@ -28,6 +37,7 @@ class OverviewOut(Schema):
     top_teams: list[StandingRowOut]
     recent_results: list[FixtureOut]
     upcoming: list[FixtureOut]
+    live: list[FixtureOut]
     last_sync: SyncRunOut | None
 
     @classmethod
@@ -39,5 +49,6 @@ class OverviewOut(Schema):
             top_teams=[StandingRowOut.from_entry(e) for e in overview.top_teams],
             recent_results=[FixtureOut.model_validate(f) for f in overview.recent_results],
             upcoming=[FixtureOut.model_validate(f) for f in overview.upcoming],
+            live=[FixtureOut.model_validate(f) for f in overview.live],
             last_sync=SyncRunOut.model_validate(overview.last_sync) if overview.last_sync else None,
         )

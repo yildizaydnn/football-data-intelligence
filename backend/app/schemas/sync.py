@@ -23,9 +23,16 @@ class SyncRunOut(Schema):
     error_message: str | None
 
 
+class SyncScheduleOut(Schema):
+    enabled: bool
+    cron: str
+    next_run_at: datetime | None
+
+
 class SyncStateOut(Schema):
     running: SyncRunOut | None
     recent: list[SyncRunOut]
+    schedule: SyncScheduleOut
 
 
 class SyncUsageOut(Schema):
@@ -34,3 +41,5 @@ class SyncUsageOut(Schema):
     daily_limit: int
     remaining: int
     provider_remaining: int | None
+    next_sync_cost: int
+    can_sync: bool

@@ -2,12 +2,13 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
+from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.enums import SyncStatus, SyncTrigger
 from app.core.exceptions import AppError, QuotaExceededError, SyncInProgressError
-from app.etl.pipeline import PipelineResult, Repositories, SyncPipeline
+from app.etl.pipeline import PipelineResult, Repositories, SyncPipeline, estimate_requests
 from app.models import SyncRun
 from app.providers.base import FootballDataProvider
 from app.repositories.api_usage_repository import ApiUsageRepository, utc_today
@@ -28,12 +29,25 @@ class SyncUsage:
     daily_limit: int
     remaining: int  # bizim sayaç ile API header'ından küçük olanı
     provider_remaining: int | None
+    next_sync_cost: int  # varsayılan lig/sezon için bir sonraki sync'in istek sayısı
+
+    @property
+    def can_sync(self) -> bool:
+        return self.remaining >= self.next_sync_cost
+
+
+@dataclass(frozen=True)
+class SyncSchedule:
+    enabled: bool
+    cron: str  # UTC
+    next_run_at: datetime | None
 
 
 @dataclass(frozen=True)
 class SyncState:
     running: SyncRun | None
     recent: list[SyncRun]
+    schedule: SyncSchedule
 
 
 class SyncService:
@@ -103,7 +117,9 @@ class SyncService:
         return run
 
     def get_state(self, recent: int = 10) -> SyncState:
-        return SyncState(self.sync_runs.get_running(), self.sync_runs.list_recent(recent))
+        return SyncState(
+            self.sync_runs.get_running(), self.sync_runs.list_recent(recent), self._schedule()
+        )
 
     def get_usage(self) -> SyncUsage:
         limit = self.settings.api_football_daily_limit
@@ -114,7 +130,21 @@ class SyncService:
             daily_limit=limit,
             remaining=self.api_usage.remaining_budget(limit),
             provider_remaining=usage.remaining if usage else None,
+            next_sync_cost=estimate_requests(
+                self.repos,
+                self.settings.default_league_id,
+                self.settings.default_season,
+                full=False,
+            ),
         )
+
+    def _schedule(self) -> SyncSchedule:
+        enabled = self.settings.scheduler_enabled and bool(self.settings.api_football_key)
+        next_run = None
+        if enabled:
+            trigger = CronTrigger.from_crontab(self.settings.sync_cron, timezone=UTC)
+            next_run = trigger.get_next_fire_time(None, datetime.now(UTC))
+        return SyncSchedule(enabled, self.settings.sync_cron, next_run)
 
     def _release_stale_runs(self) -> None:
         threshold = datetime.now(UTC) - timedelta(minutes=self.settings.sync_stale_after_minutes)

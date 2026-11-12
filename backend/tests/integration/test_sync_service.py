@@ -113,3 +113,24 @@ def test_stale_running_sync_is_released(service: SyncService, db_session: Sessio
     assert stale.status is SyncStatus.FAILED
     assert run.status is SyncStatus.PARTIAL
     assert [r.id for r in service.get_state().recent] == [run.id, stale.id]
+
+
+def test_usage_reports_next_sync_cost(service: SyncService) -> None:
+    before = service.get_usage()
+    service.run(SyncTrigger.INITIAL)
+    after = service.get_usage()
+
+    assert (before.next_sync_cost, before.can_sync) == (3, True)  # lig/takımlar henüz yok
+    assert after.next_sync_cost == 1
+
+
+def test_schedule_reports_next_run_when_enabled(db_session: Session) -> None:
+    settings = SETTINGS.model_copy(
+        update={"scheduler_enabled": True, "api_football_key": "k", "sync_cron": "0 4 * * *"}
+    )
+
+    schedule = SyncService(db_session, settings).get_state().schedule
+
+    assert schedule.enabled
+    assert (schedule.next_run_at.hour, schedule.next_run_at.minute) == (4, 0)
+    assert schedule.next_run_at > datetime.now(UTC)

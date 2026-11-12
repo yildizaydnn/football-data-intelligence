@@ -53,6 +53,8 @@ class TestSync:
 
         usage = client.get("/api/v1/sync/usage").json()
         assert (usage["requests_used"], usage["daily_limit"], usage["remaining"]) == (3, 100, 87)
+        assert (usage["next_sync_cost"], usage["can_sync"]) == (1, True)  # artık sadece maçlar
+        assert state["schedule"] == {"enabled": False, "cron": "0 4 * * *", "next_run_at": None}
 
     def test_failed_sync_returns_run_with_failed_status(
         self, client: TestClient, provider: FakeProvider
@@ -144,6 +146,10 @@ class TestReadEndpoints:
         assert body["summary"]["by_status"]["finished"] == 2
         assert body["top_teams"][0]["team"]["name"] == "Fenerbahçe"
         assert body["last_sync"]["status"] == "partial"
+        assert [f["external_id"] for f in body["live"]] == [1003]
+        rounds = body["summary"]["goals_by_round"]
+        assert [(r["number"], r["goals"]) for r in rounds] == [(6, 6)]
+        assert body["summary"]["current_round"]["number"] == 6
 
 
 class TestErrors:

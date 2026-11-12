@@ -34,6 +34,20 @@ class Repositories:
     fixtures: FixtureRepository
 
 
+def needs_reference(repos: Repositories, league_external_id: int, season_year: int) -> bool:
+    """Lig/sezon DB'de yoksa fixture'lardan önce referans veri çekilmeli."""
+    league = repos.leagues.get_by_external_id(league_external_id)
+    return league is None or repos.seasons.get_by_year(league.id, season_year) is None
+
+
+def estimate_requests(
+    repos: Repositories, league_external_id: int, season_year: int, *, full: bool
+) -> int:
+    """Bir sync'in kaç API isteği harcayacağı; provider'a dokunmaz."""
+    reference = full or needs_reference(repos, league_external_id, season_year)
+    return FIXTURE_REQUESTS + (REFERENCE_REQUESTS if reference else 0)
+
+
 class SyncPipeline:
     """extract → transform → load. Kota, kilit ve commit kararları sync_service'e aittir.
 
@@ -48,13 +62,10 @@ class SyncPipeline:
         self.requests_remaining: int | None = None
 
     def needs_reference(self, league_external_id: int, season_year: int) -> bool:
-        """Lig/sezon DB'de yoksa fixture'lardan önce referans veri çekilmeli."""
-        league = self.repos.leagues.get_by_external_id(league_external_id)
-        return league is None or self.repos.seasons.get_by_year(league.id, season_year) is None
+        return needs_reference(self.repos, league_external_id, season_year)
 
     def estimate_requests(self, league_external_id: int, season_year: int, *, full: bool) -> int:
-        reference = full or self.needs_reference(league_external_id, season_year)
-        return FIXTURE_REQUESTS + (REFERENCE_REQUESTS if reference else 0)
+        return estimate_requests(self.repos, league_external_id, season_year, full=full)
 
     def run(
         self,

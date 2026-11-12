@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.analytics.season_summary import SeasonSummary, summarize_season
+from app.core.enums import MatchStatus
 from app.models import Fixture, League, Season, SyncRun
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.sync_repository import SyncRunRepository
@@ -21,6 +22,7 @@ class Overview:
     top_teams: list[StandingEntry]
     recent_results: list[Fixture]
     upcoming: list[Fixture]
+    live: list[Fixture]
     last_sync: SyncRun | None
 
 
@@ -55,5 +57,6 @@ class OverviewService:
             upcoming=self.fixtures.list_upcoming(
                 season.id, now or datetime.now(UTC), UPCOMING_MATCHES
             ),
+            live=[f for f in all_fixtures if f.status is MatchStatus.LIVE],
             last_sync=self.sync_runs.latest(),
         )
