@@ -1,26 +1,31 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 
 import { SelectField } from "@/shared/components/select-field";
 import { formatSeason } from "@/shared/lib/format";
 
-import { useDashboardParams, useLeagues, useSeasons } from "./hooks";
+import { seasonsQuery, useDashboardParams, useLeagues, useSeasons } from "./hooks";
 
 export function LeagueSeasonSelect() {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { leagueId, season, href } = useDashboardParams();
   const leagues = useLeagues();
   const seasons = useSeasons(leagueId);
   // URL'de sezon yoksa backend varsayılanı (verisi olan en güncel sezon) = listenin başı.
   const currentSeason = season ?? seasons[0]?.year;
 
-  // Lig değişince sezon sıfırlanır; aynı sekmede kalınır (takım sayfası hariç).
-  const switchLeague = (id: string) => {
+  // Lig değişince aynı sekmede ve (yeni ligde verisi varsa) aynı sezonda kalınır.
+  // Takım id'leri ligler arası anlamsız: takım analizinde yeni ligin liderine gidilir.
+  const switchLeague = async (id: string) => {
     const section = pathname.split("/")[3];
-    const keep = section && section !== "teams" ? `/${section}` : "";
-    router.push(`/leagues/${id}${keep}`);
+    const path = section ? `/${section}` : "";
+    const target = await queryClient.fetchQuery(seasonsQuery(Number(id)));
+    const keepSeason = season !== undefined && target.some((s) => s.year === season);
+    router.push(`/leagues/${id}${path}${keepSeason ? `?season=${season}` : ""}`);
   };
 
   // Aynı sayfada (takım analizinde aynı takımda) kalınır; takım o sezonda ligde değilse
