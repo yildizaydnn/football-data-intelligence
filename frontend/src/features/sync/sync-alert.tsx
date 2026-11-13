@@ -4,11 +4,14 @@ import { TriangleAlert } from "lucide-react";
 
 import { formatDateTime } from "@/shared/lib/format";
 
+import { useDashboardParams } from "@/features/dashboard/hooks";
+
 import { useSyncStatus } from "./hooks";
 
 /** Son senkronizasyon başarısızsa: kullanıcıya eski veri gösterildiğini söyler. */
 export function SyncAlert() {
-  const { recent } = useSyncStatus();
+  const { leagueId } = useDashboardParams();
+  const { recent } = useSyncStatus(leagueId);
   const last = recent[0];
   if (!last || last.status !== "failed") return null;
 

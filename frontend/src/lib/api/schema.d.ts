@@ -228,7 +228,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Sync Status */
+        /**
+         * Get Sync Status
+         * @description Çalışan sync ve son işlemler; `league_id` verilirse geçmiş o lige göre süzülür.
+         */
         get: operations["get_sync_status"];
         put?: never;
         post?: never;
@@ -1443,7 +1446,9 @@ export interface operations {
     };
     get_sync_status: {
         parameters: {
-            query?: never;
+            query?: {
+                league_id?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1457,6 +1462,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncStateOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

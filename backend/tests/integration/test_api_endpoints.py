@@ -323,3 +323,19 @@ def test_insight_disabled_returns_503(client: TestClient, league_id: int) -> Non
 
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "ai_not_configured"
+
+
+def test_sync_history_can_be_filtered_by_league(
+    client: TestClient, db_session: Session, league_id: int
+) -> None:
+    from app.core.enums import SyncStatus, SyncTrigger
+    from app.repositories.sync_repository import SyncRunRepository
+
+    other = SyncRunRepository(db_session).try_start(SyncTrigger.MANUAL, 39, 2024)
+    SyncRunRepository(db_session).finish(other, SyncStatus.SUCCESS)
+
+    everything = client.get("/api/v1/sync/status").json()["recent"]
+    only_this = client.get("/api/v1/sync/status", params={"league_id": league_id}).json()["recent"]
+
+    assert {r["league_external_id"] for r in everything} == {203, 39}
+    assert {r["league_external_id"] for r in only_this} == {203}

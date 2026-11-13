@@ -916,7 +916,26 @@
           "sync"
         ],
         "summary": "Get Sync Status",
+        "description": "Çalışan sync ve son işlemler; `league_id` verilirse geçmiş o lige göre süzülür.",
         "operationId": "get_sync_status",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "League Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -924,6 +943,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SyncStateOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }

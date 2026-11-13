@@ -75,8 +75,13 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         )
         return self.session.scalar(stmt)
 
-    def list_recent(self, limit: int = 10) -> list[SyncRun]:
-        return self.list(order_by=[SyncRun.started_at.desc(), SyncRun.id.desc()], limit=limit)
+    def list_recent(self, limit: int = 10, league_external_id: int | None = None) -> list[SyncRun]:
+        filters = (
+            [] if league_external_id is None else [SyncRun.league_external_id == league_external_id]
+        )
+        return self.list(
+            *filters, order_by=[SyncRun.started_at.desc(), SyncRun.id.desc()], limit=limit
+        )
 
     def finish(
         self,

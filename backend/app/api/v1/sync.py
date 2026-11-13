@@ -23,9 +23,10 @@ def trigger_sync(service: SyncServiceDep, body: SyncRequest | None = None) -> Sy
     return SyncRunOut.model_validate(run)
 
 
-@router.get("/status", response_model=SyncStateOut)
-def get_sync_status(service: SyncStatusServiceDep) -> SyncStateOut:
-    return SyncStateOut.model_validate(service.get_state())
+@router.get("/status", response_model=SyncStateOut, responses=error_responses(404))
+def get_sync_status(service: SyncStatusServiceDep, league_id: int | None = None) -> SyncStateOut:
+    """Çalışan sync ve son işlemler; `league_id` verilirse geçmiş o lige göre süzülür."""
+    return SyncStateOut.model_validate(service.get_state(league_id=league_id))
 
 
 @router.get("/usage", response_model=SyncUsageOut, responses=error_responses(404))
