@@ -21,6 +21,8 @@ export function TeamCrest({ team, size = 24, className }: { team: TeamRef; size?
       alt=""
       width={size}
       height={size}
+      // Tailwind preflight img'ye height:auto verir; iki boyut birlikte sabitlenir.
+      style={{ width: size, height: size }}
       className={cn("shrink-0 object-contain", className)}
     />
   );

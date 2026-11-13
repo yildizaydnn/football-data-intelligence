@@ -1,29 +1,29 @@
-"use client";
-
 import Link from "next/link";
-import { notFound, usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { SyncAlert } from "@/features/sync/sync-alert";
 import { SyncControl, SyncControlSkeleton } from "@/features/sync/sync-control";
 import { FootballIcon } from "@/shared/components/football-icon";
 import { QueryBoundary } from "@/shared/components/query-boundary";
 
-import { Hero, Pitch } from "./hero";
-import { useDashboardParams, useLeagues } from "./hooks";
+import { HeroSection, Pitch } from "./hero";
+import { LeagueGuard } from "./league-guard";
 import { LeagueSeasonSelect } from "./league-season-select";
-import { NavTabs } from "./nav-tabs";
+import { NavTabs, NavTabsSkeleton } from "./nav-tabs";
 
-/** Tüm lig sayfalarının ortak çerçevesi: üst bar, hero, sekmeler. */
+/**
+ * Tüm lig sayfalarının ortak çerçevesi: üst bar, hero, sekmeler.
+ *
+ * Kendisi URL ya da veri okumaz (statik App Shell olarak önceden render edilir). URL'ye
+ * veya veriye bağlı her parça kendi Suspense sınırındadır; sayfa içeriği (`children`)
+ * hiçbirini beklemez → sayfa geçişleri çerçeve yüklenirken bile anında başlar.
+ */
 export function DashboardShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const { leagueId } = useDashboardParams();
-  const leagues = useLeagues();
-  if (!leagues.some((league) => league.id === leagueId)) notFound();
-  const isOverview = pathname === `/leagues/${leagueId}`;
-
   return (
     <div className="min-h-dvh">
+      <QueryBoundary fallback={null} inline>
+        <LeagueGuard />
+      </QueryBoundary>
       <TopBar
         select={
           <QueryBoundary fallback={<SelectSkeleton />} inline>
@@ -36,11 +36,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </QueryBoundary>
         }
       />
-      <QueryBoundary fallback={<Pitch compact={!isOverview} />} inline>
-        <Hero compact={!isOverview} />
+      <QueryBoundary fallback={<Pitch />} inline>
+        <HeroSection />
       </QueryBoundary>
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-12">
-        <NavTabs />
+        <Suspense fallback={<NavTabsSkeleton />}>
+          <NavTabs />
+        </Suspense>
         <QueryBoundary fallback={null} inline>
           <SyncAlert />
         </QueryBoundary>

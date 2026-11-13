@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { useOverview } from "@/features/overview/hooks";
 import { useSyncStatus } from "@/features/sync/hooks";
@@ -80,6 +81,13 @@ function GrassBlades() {
       ))}
     </div>
   );
+}
+
+/** Genel görünümde tam boy, diğer sekmelerde ince şerit. */
+export function HeroSection() {
+  const pathname = usePathname();
+  const { leagueId } = useDashboardParams();
+  return <Hero compact={pathname !== `/leagues/${leagueId}`} />;
 }
 
 export function Hero({ compact }: { compact: boolean }) {

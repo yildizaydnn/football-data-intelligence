@@ -1,12 +1,6 @@
-import { DashboardShell, DashboardShellSkeleton } from "@/features/dashboard/dashboard-shell";
-import { QueryBoundary } from "@/shared/components/query-boundary";
+import { DashboardShell } from "@/features/dashboard/dashboard-shell";
 
-// Çerçeve lig/sezonu URL'den okur; Cache Components ile bu kısım Suspense içinde olmalı
-// (QueryBoundary Suspense + hata sınırını birlikte sağlar).
+// Çerçeve statiktir; URL/veri okuyan parçaları kendi Suspense sınırlarındadır.
 export default function LeagueLayout({ children }: LayoutProps<"/leagues/[leagueId]">) {
-  return (
-    <QueryBoundary fallback={<DashboardShellSkeleton />}>
-      <DashboardShell>{children}</DashboardShell>
-    </QueryBoundary>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }

@@ -32,6 +32,15 @@ export function MatchesView() {
   );
 }
 
+export function MatchesViewSkeleton() {
+  return (
+    <div className="space-y-6">
+      <PanelSkeleton className="h-[120px]" />
+      <MatchListSkeleton />
+    </div>
+  );
+}
+
 function MatchListSkeleton() {
   return (
     <div className="space-y-6">
