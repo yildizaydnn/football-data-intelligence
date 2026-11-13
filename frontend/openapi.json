@@ -2828,6 +2828,10 @@
           "away": {
             "$ref": "#/components/schemas/SplitStatsOut"
           },
+          "recent": {
+            "$ref": "#/components/schemas/SplitStatsOut",
+            "description": "Son 5 maç (form ile aynı pencere)"
+          },
           "form": {
             "items": {
               "$ref": "#/components/schemas/MatchResult"
@@ -2860,6 +2864,7 @@
           "overall",
           "home",
           "away",
+          "recent",
           "form",
           "current_streak",
           "timeline"

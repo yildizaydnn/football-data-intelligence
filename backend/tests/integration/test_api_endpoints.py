@@ -135,6 +135,7 @@ class TestReadEndpoints:
         assert stats["overall"]["won"] == 1
         assert stats["overall"]["win_rate"] == 1.0
         assert stats["away"]["played"] == 1
+        assert stats["recent"] == stats["overall"]  # 5 maçtan az: pencereler aynı
         assert stats["current_streak"] == {"result": "win", "count": 1}
         assert stats["timeline"][0]["opponent"]["name"] == "Galatasaray"
 

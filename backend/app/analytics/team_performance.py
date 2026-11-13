@@ -91,6 +91,7 @@ class TeamPerformance:
     overall: SplitStats = field(default_factory=SplitStats)
     home: SplitStats = field(default_factory=SplitStats)
     away: SplitStats = field(default_factory=SplitStats)
+    recent: SplitStats = field(default_factory=SplitStats)  # son N maç; sezon geneliyle kıyas için
     form: list[MatchResult] = field(default_factory=list)  # son N maç, eskiden yeniye
     timeline: list[TimelinePoint] = field(default_factory=list)
 
@@ -138,7 +139,12 @@ def calculate_team_performance(
             )
         )
 
-    perf.form = [p.result for p in perf.timeline[-FORM_LENGTH:]]
+    last_matches = perf.timeline[-FORM_LENGTH:]
+    for point in last_matches:
+        perf.recent.record(
+            point.goals_for, point.goals_against, point.result, points.for_result(point.result)
+        )
+    perf.form = [p.result for p in last_matches]
     return perf
 
 

@@ -8,7 +8,7 @@ const POINTS = { win: 3, draw: 1, loss: 0 } as const;
 const STREAK_LABEL = { win: "galibiyet", draw: "beraberlik", loss: "mağlubiyet" } as const;
 
 export function SummaryCards({ stats }: { stats: TeamStats }) {
-  const { overall, form, current_streak: streak } = stats;
+  const { overall, recent, form, current_streak: streak } = stats;
   const formPoints = form.reduce((sum, r) => sum + POINTS[r], 0);
 
   return (
@@ -30,6 +30,13 @@ export function SummaryCards({ stats }: { stats: TeamStats }) {
             {overall.played} maçta {overall.won}G {overall.drawn}B {overall.lost}M
           </p>
           <p className="mt-1 text-sm text-sage">Maç başına {formatDecimal(overall.points_per_game)} puan</p>
+          <RecentLine played={recent.played}>
+            <Trend
+              current={recent.win_rate}
+              season={overall.win_rate}
+              text={`%${Math.round(recent.win_rate * 100)}`}
+            />
+          </RecentLine>
         </div>
       </Panel>
 
@@ -42,8 +49,56 @@ export function SummaryCards({ stats }: { stats: TeamStats }) {
         <p className="mt-3 text-sm text-sage">
           {overall.clean_sheets} maçta gol yemedi · {overall.failed_to_score} maçta gol atamadı
         </p>
+        <RecentLine played={recent.played}>
+          <Trend
+            current={recent.avg_goals_for}
+            season={overall.avg_goals_for}
+            text={`${formatDecimal(recent.avg_goals_for)} attı`}
+          />
+          {" · "}
+          <Trend
+            current={recent.avg_goals_against}
+            season={overall.avg_goals_against}
+            text={`${formatDecimal(recent.avg_goals_against)} yedi`}
+            lowerIsBetter
+          />
+        </RecentLine>
       </Panel>
     </div>
+  );
+}
+
+/** Sezon geneli rakamların altında aynı metriğin son 5 maçtaki değeri. */
+function RecentLine({ played, children }: { played: number; children: React.ReactNode }) {
+  return (
+    <p className="mt-2 border-t border-white/8 pt-2 text-sm text-sage">
+      Son {played} maçta: {children}
+    </p>
+  );
+}
+
+/** Son maçlardaki değer sezon ortalamasından iyiyse yeşil ▲, kötüyse kırmızı ▼. */
+function Trend({
+  current,
+  season,
+  text,
+  lowerIsBetter = false,
+}: {
+  current: number;
+  season: number;
+  text: string;
+  lowerIsBetter?: boolean;
+}) {
+  const diff = current - season;
+  if (Math.abs(diff) < 0.005) return <b className="text-chalk">{text}</b>;
+  const better = lowerIsBetter ? diff < 0 : diff > 0;
+  return (
+    <b
+      className={better ? "text-lime" : "text-loss"}
+      title={better ? "Sezon ortalamasından iyi" : "Sezon ortalamasından kötü"}
+    >
+      {text} {diff > 0 ? "▲" : "▼"}
+    </b>
   );
 }
 

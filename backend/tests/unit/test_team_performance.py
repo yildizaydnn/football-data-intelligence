@@ -52,6 +52,34 @@ def test_form_and_timeline() -> None:
     assert perf.current_streak == (W, 1)
 
 
+def test_recent_covers_only_last_five_matches() -> None:
+    # 7 maç: ilk ikisi mağlubiyet, son beşi 3G 1B 1M. Son-5 bloğu ilk ikisini görmemeli.
+    matches = [
+        match(GS, FB, "0-3", 1),
+        match(BJK, GS, "2-0", 2),
+        match(GS, TS, "2-0", 3),
+        match(FB, GS, "1-1", 4),
+        match(GS, BJK, "3-1", 5),
+        match(TS, GS, "1-0", 6),
+        match(GS, FB, "1-0", 7),
+    ]
+    perf = calculate_team_performance(GS, matches, POINTS)
+    recent = perf.recent
+
+    assert (recent.played, recent.won, recent.drawn, recent.lost) == (5, 3, 1, 1)
+    assert (recent.goals_for, recent.goals_against, recent.points) == (7, 3, 10)
+    assert recent.win_rate == pytest.approx(0.6)
+    assert recent.avg_goals_for == pytest.approx(1.4)
+    assert perf.overall.played == 7
+    assert perf.overall.win_rate == pytest.approx(3 / 7)
+
+
+def test_recent_with_fewer_than_five_matches_equals_overall() -> None:
+    perf = calculate_team_performance(GS, SEASON, POINTS)
+
+    assert perf.recent == perf.overall
+
+
 def test_current_streak_counts_consecutive_results() -> None:
     perf = calculate_team_performance(
         GS, [match(GS, FB, "0-1", 1), match(GS, BJK, "2-0", 2), match(TS, GS, "1-2", 3)], POINTS
@@ -67,4 +95,5 @@ def test_team_without_matches_has_zero_rates() -> None:
     assert perf.overall.win_rate == 0.0
     assert perf.overall.avg_goals_for == 0.0
     assert perf.form == []
+    assert perf.recent.played == 0
     assert perf.current_streak is None

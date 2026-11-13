@@ -854,6 +854,8 @@ export interface components {
             overall: components["schemas"]["SplitStatsOut"];
             home: components["schemas"]["SplitStatsOut"];
             away: components["schemas"]["SplitStatsOut"];
+            /** @description Son 5 maç (form ile aynı pencere) */
+            recent: components["schemas"]["SplitStatsOut"];
             /** Form */
             form: components["schemas"]["MatchResult"][];
             current_streak: components["schemas"]["StreakOut"] | null;

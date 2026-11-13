@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from pydantic import Field
+
 from app.core.enums import MatchResult
 from app.schemas.common import Schema
 from app.schemas.team import TeamOut, TeamRef
@@ -46,6 +48,7 @@ class TeamStatsOut(Schema):
     overall: SplitStatsOut
     home: SplitStatsOut
     away: SplitStatsOut
+    recent: SplitStatsOut = Field(description="Son 5 maç (form ile aynı pencere)")
     form: list[MatchResult]
     current_streak: StreakOut | None
     timeline: list[TimelinePointOut]
@@ -60,6 +63,7 @@ class TeamStatsOut(Schema):
             overall=SplitStatsOut.model_validate(perf.overall),
             home=SplitStatsOut.model_validate(perf.home),
             away=SplitStatsOut.model_validate(perf.away),
+            recent=SplitStatsOut.model_validate(perf.recent),
             form=perf.form,
             current_streak=StreakOut(result=streak[0], count=streak[1]) if streak else None,
             timeline=[
