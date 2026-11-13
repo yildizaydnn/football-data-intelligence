@@ -7,7 +7,7 @@ import respx
 from tenacity import wait_none
 
 from app.core.exceptions import ProviderError, QuotaExceededError
-from app.providers.api_football.client import ApiFootballClient
+from app.providers.api_football.client import RATE_LIMIT_WINDOW_SECONDS, ApiFootballClient
 from app.providers.api_football.provider import ApiFootballProvider
 from tests.conftest import load_json
 
@@ -16,8 +16,16 @@ QUOTA = {"x-ratelimit-requests-remaining": "87"}
 
 
 @pytest.fixture
-def client() -> Iterator[ApiFootballClient]:
-    with ApiFootballClient(BASE_URL, "secret", max_attempts=3, wait=wait_none()) as c:
+def sleeps() -> list[float]:
+    """Client'ın beklediği süreler; testler gerçekten uyumaz."""
+    return []
+
+
+@pytest.fixture
+def client(sleeps: list[float]) -> Iterator[ApiFootballClient]:
+    with ApiFootballClient(
+        BASE_URL, "secret", max_attempts=3, wait=wait_none(), sleep=sleeps.append
+    ) as c:
         yield c
 
 
@@ -163,8 +171,8 @@ class TestClientErrors:
         with pytest.raises(ProviderError, match="token"):
             client.get("/fixtures")
 
-    def test_per_minute_rate_limit_in_body_is_retried(
-        self, client: ApiFootballClient, api: respx.MockRouter
+    def test_per_minute_rate_limit_in_body_waits_for_next_window(
+        self, client: ApiFootballClient, api: respx.MockRouter, sleeps: list[float]
     ) -> None:
         rate_limited = {"errors": {"rateLimit": "Too many requests"}, "response": []}
         api.get("/leagues").mock(
@@ -175,6 +183,48 @@ class TestClientErrors:
         )
 
         assert client.get("/leagues").requests_made == 2
+        assert sleeps == [RATE_LIMIT_WINDOW_SECONDS]
+
+    def test_http_429_honours_retry_after_header(
+        self, client: ApiFootballClient, api: respx.MockRouter, sleeps: list[float]
+    ) -> None:
+        api.get("/leagues").mock(
+            side_effect=[
+                httpx.Response(429, headers={"retry-after": "12"}),
+                httpx.Response(200, json=load_json("leagues.json")),
+            ]
+        )
+
+        assert client.get("/leagues").requests_made == 2
+        assert sleeps == [12.0]
+
+    def test_retry_after_is_capped_at_one_window(
+        self, client: ApiFootballClient, api: respx.MockRouter, sleeps: list[float]
+    ) -> None:
+        api.get("/leagues").mock(
+            side_effect=[
+                httpx.Response(429, headers={"retry-after": "3600"}),
+                httpx.Response(200, json=load_json("leagues.json")),
+            ]
+        )
+
+        client.get("/leagues")
+
+        assert sleeps == [RATE_LIMIT_WINDOW_SECONDS]
+
+    def test_server_errors_keep_short_backoff(
+        self, client: ApiFootballClient, api: respx.MockRouter, sleeps: list[float]
+    ) -> None:
+        api.get("/leagues").mock(
+            side_effect=[
+                httpx.Response(503),
+                httpx.Response(200, json=load_json("leagues.json")),
+            ]
+        )
+
+        client.get("/leagues")
+
+        assert sleeps == [0]  # wait_none: dakika beklemesi yalnızca rate limit için
 
     def test_invalid_json_raises_provider_error(
         self, client: ApiFootballClient, api: respx.MockRouter
