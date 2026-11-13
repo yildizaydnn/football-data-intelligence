@@ -1,4 +1,5 @@
 import logging
+import math
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
@@ -7,7 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.enums import SyncStatus, SyncTrigger
-from app.core.exceptions import AppError, NotFoundError, QuotaExceededError, SyncInProgressError
+from app.core.exceptions import (
+    AppError,
+    NotFoundError,
+    QuotaExceededError,
+    SyncInProgressError,
+    TooManyRequestsError,
+)
 from app.etl.pipeline import PipelineResult, Repositories, SyncPipeline, estimate_requests
 from app.models import SyncRun
 from app.providers.base import FootballDataProvider
@@ -35,6 +42,15 @@ class SyncUsage:
     @property
     def can_sync(self) -> bool:
         return self.remaining >= self.next_sync_cost
+
+
+@dataclass(frozen=True)
+class TrackedSyncResult:
+    """Takip edilen bir lig için zamanlanmış sync sonucu: ya çalıştı (run) ya da reddedildi."""
+
+    league_external_id: int
+    run: SyncRun | None
+    error: str | None = None
 
 
 @dataclass(frozen=True)
@@ -131,16 +147,34 @@ class SyncService:
         history = self.sync_runs.list_recent(recent, self._external_league(league_id))
         return SyncState(self.sync_runs.get_running(), history, self._schedule())
 
-    def run_manual(
-        self, league_id: int | None = None, season: int | None = None, *, full: bool = False
-    ) -> SyncRun:
-        """Arayüzden tetiklenen sync: ekranda görüntülenen lig (iç id) ve sezon için."""
-        return self.run(
-            SyncTrigger.MANUAL,
-            full=full,
-            league_external_id=self._external_league(league_id),
-            season=season,
-        )
+    def run_manual(self, league_id: int | None = None, season: int | None = None) -> SyncRun:
+        """Arayüzden tetiklenen sync: ekranda görüntülenen lig (iç id) ve sezon için.
+
+        Herkese açık bir uç olduğu için aynı lig/sezon için bekleme süresi uygulanır; tam yükleme
+        (referans veriyi yenileme) yalnızca CLI'dan yapılır.
+        """
+        league_external_id = self._external_league(league_id) or self.settings.default_league_id
+        season = season or self.settings.default_season
+        self._check_cooldown(league_external_id, season)
+        return self.run(SyncTrigger.MANUAL, league_external_id=league_external_id, season=season)
+
+    def run_tracked(self) -> list[TrackedSyncResult]:
+        """Takip edilen her lig için zamanlanmış sync (dış cron ucu). Bitmiş sezonlar atlanır.
+
+        Ligler birbirinden bağımsızdır: biri reddedilse (kota, kilit) diğerleri yine denenir.
+        """
+        results: list[TrackedSyncResult] = []
+        for league in self.settings.tracked_leagues:
+            try:
+                run = self.run(
+                    SyncTrigger.SCHEDULED,
+                    league_external_id=league,
+                    season=self.settings.default_season,
+                )
+                results.append(TrackedSyncResult(league, run))
+            except AppError as exc:  # sync başlamadan reddedildi; veri yazılmadı
+                results.append(TrackedSyncResult(league, None, exc.message))
+        return results
 
     def get_usage(self, league_id: int | None = None, season: int | None = None) -> SyncUsage:
         """Günlük kota + verilen lig/sezon için bir sonraki sync'in istek maliyeti."""
@@ -194,6 +228,15 @@ class SyncService:
         if self.repos.fixtures.count_pending(season_row.id) == 0:
             return "Sezondaki tüm maçlar sonuçlandı; API isteği atılmadı"
         return None
+
+    def _check_cooldown(self, league_external_id: int, season: int) -> None:
+        cooldown = self.settings.manual_sync_cooldown_minutes * 60
+        elapsed = self.sync_runs.seconds_since_last_run(league_external_id, season)
+        if cooldown and elapsed is not None and elapsed < cooldown:
+            minutes = max(1, math.ceil((cooldown - elapsed) / 60))
+            raise TooManyRequestsError(
+                f"Bu lig ve sezon az önce güncellendi; {minutes} dakika sonra tekrar deneyin"
+            )
 
     def _check_budget(self, needed: int) -> None:
         remaining = self.api_usage.remaining_budget(self.settings.api_football_daily_limit)

@@ -33,11 +33,16 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
     scheduler_enabled: bool = False
     sync_cron: str = "0 4 * * *"  # UTC; günde bir kez maçları güncelle (1 istek)
-    # Doluysa POST /sync bu değeri X-Sync-Token header'ında ister (dış cron, prod ortamı).
+    # POST /sync/scheduled (dış cron, ör. GitHub Actions) bu değeri X-Sync-Token header'ında
+    # ister. Boşsa o uç kapalıdır; arayüzün kullandığı POST /sync şifresizdir.
     sync_api_token: str = ""
+    # Arayüzden elle güncelleme: aynı lig/sezon için iki güncelleme arasındaki en kısa süre.
+    manual_sync_cooldown_minutes: int = 10
     sync_stale_after_minutes: int = 30  # bu süreden uzun RUNNING kalan sync çökmüş sayılır
     # Maç istatistikleri isteğe bağlı çekilir; günlük kotanın son N isteği sync'e ayrılır.
     statistics_quota_reserve: int = 10
+    # Maç istatistikleri herkese açık bir uçtan istenir; günde en fazla bu kadar maç için çekilir.
+    statistics_daily_limit: int = 30
 
     # AI karşılaştırma (Bonus C). Anahtar yoksa özellik kapalıdır.
     gemini_api_key: str = ""

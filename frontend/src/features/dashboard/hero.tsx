@@ -14,7 +14,6 @@ import { nameLang } from "@/shared/lib/locale";
 
 import { useDashboardParams } from "./hooks";
 
-/** Animasyonlu saha: kayan çim şeritleri, beyaz çizgiler, yuvarlanan top, sallanan çimler. */
 export function Pitch({ compact, children }: { compact?: boolean; children?: React.ReactNode }) {
   return (
     <div

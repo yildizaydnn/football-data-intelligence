@@ -210,11 +210,34 @@ export interface paths {
         put?: never;
         /**
          * Trigger Sync
-         * @description Elle senkronizasyon. Kota yetmezse 429, başka sync çalışıyorsa 409 döner.
+         * @description Arayüzden elle güncelleme (şifresiz). Yalnızca maçlar güncellenir.
          *
+         *     429: kota yetersiz ya da aynı lig/sezon için bekleme süresi dolmadı. 409: başka sync çalışıyor.
          *     Sync başladıktan sonraki hatalar 200 + status=failed olarak döner (kayıt oluşmuştur).
          */
         post: operations["trigger_sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sync/scheduled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trigger Scheduled Sync
+         * @description Dış zamanlayıcı (GitHub Actions) için: takip edilen bütün ligler, X-Sync-Token ister.
+         *
+         *     Uygulama içi zamanlayıcıyla aynı kurallar: bitmiş sezonlar istek atılmadan atlanır.
+         */
+        post: operations["trigger_scheduled_sync"];
         delete?: never;
         options?: never;
         head?: never;
@@ -569,6 +592,13 @@ export interface components {
             /** Zones */
             zones: components["schemas"]["ZoneOut"][];
         };
+        /** ScheduledSyncOut */
+        ScheduledSyncOut: {
+            /** Results */
+            results: components["schemas"]["TrackedSyncOut"][];
+            /** Failed */
+            failed: boolean;
+        };
         /** SeasonOut */
         SeasonOut: {
             /** Id */
@@ -713,11 +743,6 @@ export interface components {
             league_id?: number | null;
             /** Season */
             season?: number | null;
-            /**
-             * Full
-             * @default false
-             */
-            full: boolean;
         };
         /** SyncRunOut */
         SyncRunOut: {
@@ -879,6 +904,14 @@ export interface components {
             result: components["schemas"]["MatchResult"];
             /** Cumulative Points */
             cumulative_points: number;
+        };
+        /** TrackedSyncOut */
+        TrackedSyncOut: {
+            /** League External Id */
+            league_external_id: number;
+            run: components["schemas"]["SyncRunOut"] | null;
+            /** Error */
+            error: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1387,9 +1420,7 @@ export interface operations {
     trigger_sync: {
         parameters: {
             query?: never;
-            header?: {
-                "x-sync-token"?: string | null;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1408,8 +1439,8 @@ export interface operations {
                     "application/json": components["schemas"]["SyncRunOut"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1442,6 +1473,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    trigger_scheduled_sync: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-sync-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledSyncOut"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

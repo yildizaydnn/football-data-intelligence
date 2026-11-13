@@ -114,6 +114,32 @@ class TestTeamStatsService:
         assert stats.opponents[point.opponent_id].name == "Galatasaray"
         assert len(service.list_teams(league.id)) == 4
 
+    def test_matches_outside_league_rounds_are_ignored(
+        self, league: League, db_session: Session, service: TeamStatsService
+    ) -> None:
+        # Puan tablosu gibi: kuraldaki turlara (^Regular Season) girmeyen maç sayılmaz.
+        from app.models import Fixture
+
+        db_session.query(Fixture).filter_by(external_id=1002).update(
+            {"round": "Relegation Play-offs"}
+        )
+
+        stats = service.get_team_stats(league.id, _team_id(db_session, 549))
+
+        assert stats.performance.overall.played == 0  # 1002 dışında bitmiş maçı yok
+
+    def test_team_not_playing_in_season_is_not_found(
+        self, league: League, db_session: Session, service: TeamStatsService
+    ) -> None:
+        from app.models import Team
+
+        outsider = Team(external_id=4242, name="Başka Lig FK")
+        db_session.add(outsider)
+        db_session.flush()
+
+        with pytest.raises(NotFoundError, match="yer almıyor"):
+            service.get_team_stats(league.id, outsider.id)
+
     def test_unknown_team(self, league: League, service: TeamStatsService):
 
         with pytest.raises(NotFoundError):

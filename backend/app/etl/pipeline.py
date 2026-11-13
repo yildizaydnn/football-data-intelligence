@@ -8,6 +8,7 @@ from app.etl.base import SkippedRecord
 from app.etl.transformers.fixture_transformer import FixtureTransformer
 from app.etl.transformers.league_transformer import LeagueTransformer, SeasonTransformer
 from app.etl.transformers.team_transformer import TeamTransformer
+from app.providers.api_football.dto import FixtureDTO, TeamDTO, TeamInfo
 from app.providers.base import FootballDataProvider, ProviderResponse
 from app.repositories.base import UpsertResult
 from app.repositories.fixture_repository import FixtureRepository
@@ -144,10 +145,17 @@ class SyncPipeline:
             for team_id in (dto.teams.home.id, dto.teams.away.id)
             if team_id is not None
         ]
+        team_ids = self.repos.teams.id_map(team_external_ids)
+        if missing := _teams_missing_from(response.data, team_ids):
+            # /teams listesinde olmayan takımın maçı atlanmasın: maçtaki bilgiyle (id, ad, logo)
+            # eklenir. Yalnızca eksikler yazılır; mevcut takımın ayrıntıları ezilmez.
+            teams = TeamTransformer().transform_many(missing)
+            result.skipped += teams.skipped
+            result.upsert += self.repos.teams.upsert(teams.items)
+            team_ids = self.repos.teams.id_map(team_external_ids)
+            logger.info("Maç verisinden %d takım eklendi", len(teams.items))
         cleaning = self.rules.resolve(league_external_id, season_year).cleaning
-        transformer = FixtureTransformer(
-            season.id, self.repos.teams.id_map(team_external_ids), cleaning.status_map
-        )
+        transformer = FixtureTransformer(season.id, team_ids, cleaning.status_map)
         fixtures = transformer.transform_many(response.data)
         result.skipped += fixtures.skipped
         result.upsert += self.repos.fixtures.upsert_with_changes(fixtures.items, sync_run_id)
@@ -162,3 +170,14 @@ class SyncPipeline:
         if response.requests_remaining is not None:
             self.requests_remaining = response.requests_remaining
         return response
+
+
+def _teams_missing_from(fixtures: list[FixtureDTO], known: dict[int, int]) -> list[TeamDTO]:
+    missing: dict[int, TeamDTO] = {}
+    for dto in fixtures:
+        for side in (dto.teams.home, dto.teams.away):
+            if side.id is not None and side.id not in known and side.id not in missing:
+                missing[side.id] = TeamDTO(
+                    team=TeamInfo(id=side.id, name=side.name, logo=side.logo)
+                )
+    return list(missing.values())

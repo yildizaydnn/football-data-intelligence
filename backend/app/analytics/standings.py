@@ -4,7 +4,6 @@ Lige özel her şey `StandingsRules` ile dışarıdan gelir (rules spec katmanı
 puan değerleri, sıralama kriterleri, tabloya giren haftalar ve puan silme cezaları.
 """
 
-import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
@@ -13,6 +12,7 @@ from app.analytics.common import (
     MatchLike,
     PointsTable,
     goals_for_team,
+    in_rounds,
     result_for,
     scored_in_order,
 )
@@ -72,10 +72,7 @@ def calculate_standings(
 
     `team_ids` verilirse henüz maç oynamamış takımlar da tabloda 0 puanla yer alır.
     """
-    pattern = re.compile(rules.round_pattern) if rules.round_pattern else None
-    counted = [
-        m for m in scored_in_order(matches) if pattern is None or pattern.search(m.round or "")
-    ]
+    counted = in_rounds(scored_in_order(matches), rules.round_pattern)
 
     rows: dict[int, StandingRow] = {team_id: StandingRow(team_id) for team_id in team_ids}
     for match in counted:

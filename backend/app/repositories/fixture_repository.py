@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import ColumnElement, or_, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.orm import joinedload
 
 from app.core.enums import MatchStatus, SortOrder
@@ -24,6 +24,23 @@ class FixtureRepository(BaseRepository[Fixture]):
             .where(Fixture.id == fixture_id)
         )
         return self.session.scalar(stmt)
+
+    def lock(self, fixture_id: int) -> Fixture | None:
+        """Satırı transaction sonuna kadar kilitler ve güncel halini yeniden okur.
+
+        Aynı maç için eşzamanlı istekler sıraya girer; ikinci istek ilkinin yazdığını görür.
+        """
+        stmt = (
+            select(Fixture)
+            .where(Fixture.id == fixture_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        return self.session.scalar(stmt)
+
+    def count_statistics_fetched_since(self, since: datetime) -> int:
+        stmt = select(func.count()).where(Fixture.statistics_fetched_at >= since)
+        return self.session.scalar(stmt) or 0
 
     def list_filtered(
         self,
@@ -106,14 +123,12 @@ class FixtureRepository(BaseRepository[Fixture]):
         if not items:
             return UpsertResult()
 
-        # 1. Mevcut kayıtları tek sorguyla oku
         tracked_cols = [getattr(Fixture, f) for f in self.TRACKED_FIELDS]
         stmt = select(Fixture.external_id, Fixture.id, *tracked_cols).where(
             Fixture.external_id.in_({item["external_id"] for item in items})
         )
         existing = {row.external_id: row for row in self.session.execute(stmt)}
 
-        # 2. Eski/yeni değerleri karşılaştır
         changes: list[FixtureChange] = []
         for item in items:
             old = existing.get(item["external_id"])
@@ -131,7 +146,6 @@ class FixtureRepository(BaseRepository[Fixture]):
                         )
                     )
 
-        # 3. Upsert, 4. geçmişi yaz
         result = self.upsert(items)
         self.session.add_all(changes)
         self.session.flush()

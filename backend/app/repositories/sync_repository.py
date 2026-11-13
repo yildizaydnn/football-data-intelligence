@@ -59,6 +59,16 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         stmt = select(SyncRun).order_by(SyncRun.started_at.desc(), SyncRun.id.desc()).limit(1)
         return self.session.scalar(stmt)
 
+    def seconds_since_last_run(self, league_external_id: int, season: int) -> float | None:
+        """Lig/sezon için atlanmamış son sync'in başlangıcından beri geçen süre (DB saatiyle)."""
+        stmt = select(func.extract("epoch", func.now() - func.max(SyncRun.started_at))).where(
+            SyncRun.league_external_id == league_external_id,
+            SyncRun.season == season,
+            SyncRun.status != SyncStatus.SKIPPED,
+        )
+        value = self.session.scalar(stmt)
+        return float(value) if value is not None else None
+
     def latest_data_update(self, league_external_id: int | None = None) -> SyncRun | None:
         """Veriyi gerçekten yazan son sync (başarılı/kısmi); atlanan/başarısız sayılmaz.
 

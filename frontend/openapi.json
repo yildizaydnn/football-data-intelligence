@@ -819,26 +819,8 @@
           "sync"
         ],
         "summary": "Trigger Sync",
-        "description": "Elle senkronizasyon. Kota yetmezse 429, başka sync çalışıyorsa 409 döner.\n\nSync başladıktan sonraki hatalar 200 + status=failed olarak döner (kayıt oluşmuştur).",
+        "description": "Arayüzden elle güncelleme (şifresiz). Yalnızca maçlar güncellenir.\n\n429: kota yetersiz ya da aynı lig/sezon için bekleme süresi dolmadı. 409: başka sync çalışıyor.\nSync başladıktan sonraki hatalar 200 + status=failed olarak döner (kayıt oluşmuştur).",
         "operationId": "trigger_sync",
-        "parameters": [
-          {
-            "name": "x-sync-token",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Sync-Token"
-            }
-          }
-        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -867,6 +849,86 @@
               }
             }
           },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/scheduled": {
+      "post": {
+        "tags": [
+          "sync"
+        ],
+        "summary": "Trigger Scheduled Sync",
+        "description": "Dış zamanlayıcı (GitHub Actions) için: takip edilen bütün ligler, X-Sync-Token ister.\n\nUygulama içi zamanlayıcıyla aynı kurallar: bitmiş sezonlar istek atılmadan atlanır.",
+        "operationId": "trigger_scheduled_sync",
+        "parameters": [
+          {
+            "name": "x-sync-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Sync-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledSyncOut"
+                }
+              }
+            }
+          },
           "401": {
             "content": {
               "application/json": {
@@ -876,26 +938,6 @@
               }
             },
             "description": "Unauthorized"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Conflict"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Too Many Requests"
           },
           "422": {
             "description": "Validation Error",
@@ -1988,6 +2030,27 @@
         "title": "RulesOut",
         "description": "Bir lig + sezon için geçerli kurallar (rules spec katmanından)."
       },
+      "ScheduledSyncOut": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/TrackedSyncOut"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "failed": {
+            "type": "boolean",
+            "title": "Failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "failed"
+        ],
+        "title": "ScheduledSyncOut"
+      },
       "SeasonOut": {
         "properties": {
           "id": {
@@ -2412,11 +2475,6 @@
               }
             ],
             "title": "Season"
-          },
-          "full": {
-            "type": "boolean",
-            "title": "Full",
-            "default": false
           }
         },
         "type": "object",
@@ -2912,6 +2970,42 @@
           "cumulative_points"
         ],
         "title": "TimelinePointOut"
+      },
+      "TrackedSyncOut": {
+        "properties": {
+          "league_external_id": {
+            "type": "integer",
+            "title": "League External Id"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyncRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "league_external_id",
+          "run",
+          "error"
+        ],
+        "title": "TrackedSyncOut"
       },
       "ValidationError": {
         "properties": {

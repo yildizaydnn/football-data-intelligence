@@ -29,6 +29,22 @@ function TeamAnalysis({ teamId }: { teamId: number }) {
   const stats = useTeamStats(leagueId, teamId, season);
   const country = useLeagues().find((l) => l.id === leagueId)?.country;
 
+  if (stats === null) {
+    return (
+      <div className="space-y-5">
+        <div className="flex justify-end">
+          <QueryBoundary fallback={<PanelSkeleton className="h-[66px] w-60" />} inline>
+            <TeamPicker teamId={teamId} />
+          </QueryBoundary>
+        </div>
+        <EmptyState
+          title="Bu takım seçilen sezonda bu ligde yer almıyor"
+          hint="Takım seçiciden bu sezonun takımlarından birini seçin."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-4">

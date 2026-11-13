@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.enums import SyncTrigger
-from app.core.exceptions import ProviderError, QuotaExceededError
+from app.core.exceptions import ProviderError, QuotaExceededError, TooManyRequestsError
 from app.repositories.api_usage_repository import ApiUsageRepository
 from app.repositories.fixture_repository import FixtureRepository
 from app.rules.engine import get_rule_engine
@@ -116,3 +116,46 @@ def test_provider_error_counts_requests_and_allows_retry(
 
     del provider.fail_on["get_fixture_statistics"]
     assert service.get(fixture_id).availability is StatisticsAvailability.AVAILABLE
+
+
+def test_daily_limit_caps_fetches(
+    db_session: Session, provider: FakeProvider, service: StatisticsService
+) -> None:
+    capped = StatisticsService(
+        db_session,
+        SETTINGS.model_copy(update={"statistics_daily_limit": 1}),
+        get_rule_engine(),
+        provider,
+    )
+    capped.get(_fixture_id(db_session, 1001))  # günün ilk ve tek hakkı
+    provider.calls.clear()
+
+    with pytest.raises(TooManyRequestsError, match="yarın"):
+        capped.get(_fixture_id(db_session, 1002))
+
+    assert provider.calls == []
+    assert service.get(_fixture_id(db_session, 1001)).lines  # çekilmiş olan yine okunur
+
+
+def test_fetch_done_while_waiting_for_lock_is_not_repeated(
+    db_session: Session, provider: FakeProvider, service: StatisticsService
+) -> None:
+    from datetime import UTC, datetime
+
+    from sqlalchemy import update
+
+    from app.models import Fixture
+
+    fixture_id = _fixture_id(db_session, 1001)
+    FixtureRepository(db_session).get(fixture_id)  # nesne oturumda "çekilmemiş" haliyle
+    # Eşzamanlı başka bir istek çekip damgaladı (ORM nesnesini güncellemeden, doğrudan SQL).
+    db_session.execute(
+        update(Fixture)
+        .where(Fixture.id == fixture_id)
+        .values(statistics_fetched_at=datetime.now(UTC))
+        .execution_options(synchronize_session=False)
+    )
+
+    service.get(fixture_id)
+
+    assert provider.calls == []  # kilitten sonra güncel satır okundu, tekrar çekilmedi

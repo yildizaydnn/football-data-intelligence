@@ -10,7 +10,6 @@ import { formatDay } from "@/shared/lib/format";
 const config = { points: { label: "Puan", color: "var(--color-lime)" } } satisfies ChartConfig;
 const RESULT = { win: "G", draw: "B", loss: "M" } as const;
 
-/** Sezon boyunca maç maç biriken puan. */
 export function PointsChart({ stats }: { stats: TeamStats }) {
   const data = stats.timeline.map((p, i) => ({
     match: i + 1,

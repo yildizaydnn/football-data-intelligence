@@ -9,6 +9,7 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
+import app.core.database  # noqa: F401  (bağlantıları UTC'ye sabitleyen olay dinleyicisi)
 from app.core.config import get_settings
 from app.models import Base
 

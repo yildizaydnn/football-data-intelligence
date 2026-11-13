@@ -19,7 +19,7 @@ class StandingEntry:
 class Standings:
     season: Season
     entries: list[StandingEntry]
-    rules: RuleContext  # tabloyu üreten kurallar (bölgeler, sıralama kriterleri)
+    rules: RuleContext
 
 
 class StandingsService:

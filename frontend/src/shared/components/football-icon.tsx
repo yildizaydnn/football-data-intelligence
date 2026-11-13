@@ -1,6 +1,5 @@
 import type { SVGProps } from "react";
 
-/** Klasik siyah-beyaz top. */
 export function FootballIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden {...props}>

@@ -101,3 +101,28 @@ def test_requests_are_counted_even_when_provider_fails(
         pipeline.run(LEAGUE, SEASON)
 
     assert pipeline.requests_made == 2 + 3
+
+
+def test_team_missing_from_team_list_is_added_from_fixtures(
+    pipeline: SyncPipeline, provider: FakeProvider, repos: Repositories
+) -> None:
+    provider.teams = [t for t in provider.teams if t["team"]["id"] != 998]
+    provider.fixture(1002)["teams"]["away"]["logo"] = "https://example.com/998.png"
+
+    pipeline.run(203, 2024)
+
+    team = repos.teams.get_by_external_id(998)
+    assert team is not None and team.name
+    assert team.logo_url == "https://example.com/998.png"
+    assert repos.fixtures.count() == 5  # 998'in maçları atlanmadı
+
+
+def test_existing_team_details_are_not_overwritten_from_fixtures(
+    pipeline: SyncPipeline, provider: FakeProvider, repos: Repositories
+) -> None:
+    pipeline.run(203, 2024)
+    venue = repos.teams.get_by_external_id(645).venue_name
+
+    pipeline.run(203, 2024)
+
+    assert repos.teams.get_by_external_id(645).venue_name == venue

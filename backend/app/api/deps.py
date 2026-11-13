@@ -49,9 +49,11 @@ RuleEngineDep = Annotated[RuleEngine, Depends(get_rule_engine)]
 def require_sync_token(
     settings: SettingsDep, x_sync_token: Annotated[str | None, Header()] = None
 ) -> None:
-    """SYNC_API_TOKEN tanımlıysa sync tetikleme yetkisi ister; boşsa (yerel geliştirme) açık."""
+    """Dış cron ucunun yetkisi. SYNC_API_TOKEN tanımlı değilse uç kapalıdır."""
     expected = settings.sync_api_token
-    if expected and not secrets.compare_digest(x_sync_token or "", expected):
+    if not expected:
+        raise UnauthorizedError("Zamanlanmış güncelleme ucu kapalı (SYNC_API_TOKEN tanımlı değil)")
+    if not secrets.compare_digest(x_sync_token or "", expected):
         raise UnauthorizedError("Geçersiz veya eksik X-Sync-Token")
 
 

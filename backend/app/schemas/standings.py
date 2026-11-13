@@ -18,7 +18,7 @@ class StandingRowOut(Schema):
     points: int
     deduction: int  # puan silme cezası (spec'ten)
     form: list[MatchResult]
-    zone: ZoneOut | None = None  # lig kuralındaki tablo bölgesi
+    zone: ZoneOut | None = None
 
     @classmethod
     def from_entry(cls, entry: StandingEntry, zone: ZoneOut | None = None) -> "StandingRowOut":

@@ -1,5 +1,6 @@
 """Analytics modüllerinin ortak tipleri. DB, ORM veya HTTP bilmez."""
 
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
@@ -20,6 +21,22 @@ class PointsTable:
 
     def for_result(self, result: MatchResult) -> int:
         return {MatchResult.WIN: self.win, MatchResult.DRAW: self.draw}.get(result, self.loss)
+
+
+class RoundLike(Protocol):
+    @property
+    def round(self) -> str | None: ...
+
+
+def in_rounds[M: RoundLike](matches: Iterable[M], round_pattern: str | None) -> list[M]:
+    """Lig kuralındaki haftalara (ör. `^Regular Season`) giren maçlar; desen yoksa hepsi.
+
+    Puan tablosu, sezon özeti ve takım analizi aynı maç kümesini kullansın diye tek yerde.
+    """
+    if not round_pattern:
+        return list(matches)
+    pattern = re.compile(round_pattern)
+    return [m for m in matches if pattern.search(m.round or "")]
 
 
 class MatchLike(Protocol):

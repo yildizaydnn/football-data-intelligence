@@ -11,8 +11,13 @@ from app.core.exceptions import ProviderError
 from app.main import create_app
 from tests.fakes import FakeProvider
 
+# Bekleme süresi kapalı: testler aynı ligi art arda güncelleyebilsin (ayrıca test ediliyor).
 SETTINGS = Settings(
-    _env_file=None, default_league_id=203, default_season=2024, api_football_daily_limit=100
+    _env_file=None,
+    default_league_id=203,
+    default_season=2024,
+    api_football_daily_limit=100,
+    manual_sync_cooldown_minutes=0,
 )
 
 
@@ -34,7 +39,7 @@ def client(db_session: Session, provider: FakeProvider) -> Iterator[TestClient]:
 @pytest.fixture
 def league_id(client: TestClient) -> int:
     """Veriyi gerçek API yolu üzerinden yükler: POST /sync."""
-    assert client.post("/api/v1/sync", json={"full": True}).status_code == 200
+    assert client.post("/api/v1/sync").status_code == 200
     return client.get("/api/v1/leagues").json()[0]["id"]
 
 
@@ -66,8 +71,8 @@ class TestSync:
         assert (run["status"], run["error_message"]) == ("failed", "API-Football HTTP 500")
 
     def test_quota_exceeded_returns_429(self, client: TestClient, provider: FakeProvider) -> None:
-        client.app.dependency_overrides[get_settings] = lambda: Settings(
-            _env_file=None, default_league_id=203, default_season=2024, api_football_daily_limit=1
+        client.app.dependency_overrides[get_settings] = lambda: SETTINGS.model_copy(
+            update={"api_football_daily_limit": 1}
         )
 
         response = client.post("/api/v1/sync")
@@ -201,30 +206,146 @@ def test_openapi_has_readable_operation_ids(client: TestClient) -> None:
     assert paths["/api/v1/sync"]["post"]["operationId"] == "trigger_sync"
 
 
-class TestSyncToken:
+class TestManualSyncCooldown:
     @pytest.fixture
-    def protected(self, client: TestClient) -> TestClient:
-        client.app.dependency_overrides[get_settings] = lambda: Settings(
-            _env_file=None, default_league_id=203, default_season=2024, sync_api_token="s3cret"
+    def cooldown(self, client: TestClient) -> TestClient:
+        client.app.dependency_overrides[get_settings] = lambda: SETTINGS.model_copy(
+            update={"manual_sync_cooldown_minutes": 10}
         )
         return client
 
-    def test_missing_token_is_rejected(self, protected: TestClient, provider: FakeProvider):
-        response = protected.post("/api/v1/sync")
+    def test_second_sync_within_cooldown_is_rejected(
+        self, cooldown: TestClient, provider: FakeProvider
+    ) -> None:
+        assert cooldown.post("/api/v1/sync").status_code == 200
+        calls = len(provider.calls)
 
-        assert response.status_code == 401
-        assert response.json()["error"]["code"] == "unauthorized"
+        response = cooldown.post("/api/v1/sync")
+
+        assert response.status_code == 429
+        assert response.json()["error"]["code"] == "too_many_requests"
+        assert "10 dakika" in response.json()["error"]["message"]
+        assert len(provider.calls) == calls  # API'ye istek atılmadı
+
+    def test_cooldown_is_per_league_and_season(
+        self, cooldown: TestClient, db_session: Session
+    ) -> None:
+        from app.core.enums import SyncStatus, SyncTrigger
+        from app.repositories.sync_repository import SyncRunRepository
+
+        other = SyncRunRepository(db_session).try_start(SyncTrigger.MANUAL, 39, 2024)
+        SyncRunRepository(db_session).finish(other, SyncStatus.SUCCESS)
+
+        assert cooldown.post("/api/v1/sync").status_code == 200  # 203/2024 etkilenmez
+
+    def test_skipped_runs_do_not_start_cooldown(
+        self, cooldown: TestClient, db_session: Session
+    ) -> None:
+        from app.core.enums import SyncTrigger
+        from app.repositories.sync_repository import SyncRunRepository
+
+        SyncRunRepository(db_session).record_skipped(SyncTrigger.SCHEDULED, "bitti", 203, 2024)
+
+        assert cooldown.post("/api/v1/sync").status_code == 200
+
+    def test_full_reload_is_not_exposed(self, client: TestClient, provider: FakeProvider) -> None:
+        client.post("/api/v1/sync")
+        provider.calls.clear()
+
+        client.post("/api/v1/sync", json={"full": True})  # bilinmeyen alan yok sayılır
+
+        assert provider.calls == ["get_fixtures"]
+
+
+class TestScheduledSyncEndpoint:
+    @pytest.fixture
+    def protected(self, client: TestClient) -> TestClient:
+        client.app.dependency_overrides[get_settings] = lambda: SETTINGS.model_copy(
+            update={"sync_api_token": "s3cret", "tracked_leagues": [203]}
+        )
+        return client
+
+    def _post(self, client: TestClient, token: str | None = "s3cret"):
+        headers = {"X-Sync-Token": token} if token is not None else {}
+        return client.post("/api/v1/sync/scheduled", headers=headers)
+
+    def test_missing_or_wrong_token_is_rejected(
+        self, protected: TestClient, provider: FakeProvider
+    ) -> None:
+        assert self._post(protected, None).status_code == 401
+        assert self._post(protected, "nope").status_code == 401
         assert provider.calls == []
 
-    def test_wrong_token_is_rejected(self, protected: TestClient) -> None:
-        response = protected.post("/api/v1/sync", headers={"X-Sync-Token": "nope"})
+    def test_closed_when_no_token_is_configured(
+        self, client: TestClient, provider: FakeProvider
+    ) -> None:
+        response = self._post(client, "anything")
 
         assert response.status_code == 401
+        assert "kapalı" in response.json()["error"]["message"]
+        assert provider.calls == []
 
-    def test_valid_token_is_accepted(self, protected: TestClient) -> None:
-        response = protected.post("/api/v1/sync", headers={"X-Sync-Token": "s3cret"})
+    def test_syncs_tracked_leagues_as_scheduled(self, protected: TestClient) -> None:
+        body = self._post(protected).json()
 
-        assert response.status_code == 200
+        [result] = body["results"]
+        assert result["league_external_id"] == 203
+        assert (result["run"]["trigger"], result["error"]) == ("scheduled", None)
+        assert body["failed"] is False
+
+    def test_finished_season_is_skipped_without_requests(
+        self, protected: TestClient, provider: FakeProvider, league_id: int
+    ) -> None:
+        provider.calls.clear()
+        # FakeProvider sezonunda sonuçlanmamış maç var; hepsini bitmiş say.
+        from app.models import Fixture
+
+        db = protected.app.dependency_overrides[get_session]()
+        db.query(Fixture).update({"status": "finished", "home_goals": 1, "away_goals": 0})
+
+        [result] = self._post(protected).json()["results"]
+
+        assert result["run"]["status"] == "skipped"
+        assert provider.calls == []
+
+    def test_failed_run_is_reported(self, protected: TestClient, provider: FakeProvider) -> None:
+        provider.fail_on["get_league"] = ProviderError("API-Football HTTP 500", requests_made=1)
+
+        body = self._post(protected).json()
+
+        assert body["failed"] is True
+        assert body["results"][0]["run"]["status"] == "failed"
+
+    def test_leagues_run_independently(self, client: TestClient) -> None:
+        client.app.dependency_overrides[get_settings] = lambda: SETTINGS.model_copy(
+            update={"sync_api_token": "s3cret", "tracked_leagues": [39, 203]}
+        )
+
+        body = self._post(client).json()
+
+        # FakeProvider 39'u tanımıyor: o lig başarısız olur, 203 yine çalışır.
+        assert [(r["league_external_id"], r["run"]["status"]) for r in body["results"]] == [
+            (39, "failed"),
+            (203, "partial"),
+        ]
+        assert body["failed"] is True
+
+    def test_rejected_league_is_reported_not_failed(
+        self, protected: TestClient, db_session: Session
+    ) -> None:
+        from app.core.enums import SyncTrigger
+        from app.repositories.sync_repository import SyncRunRepository
+
+        SyncRunRepository(db_session).try_start(SyncTrigger.MANUAL)  # başka sync çalışıyor
+
+        body = self._post(protected).json()
+
+        assert body["results"][0]["run"] is None
+        assert "çalışan bir senkronizasyon" in body["results"][0]["error"]
+        assert body["failed"] is False
+
+    def test_manual_sync_endpoint_needs_no_token(self, protected: TestClient) -> None:
+        assert protected.post("/api/v1/sync").status_code == 200
 
     def test_read_endpoints_stay_public(self, protected: TestClient) -> None:
         assert protected.get("/api/v1/sync/usage").status_code == 200

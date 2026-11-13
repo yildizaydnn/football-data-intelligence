@@ -9,6 +9,6 @@ class GeneratedText:
 
 
 class TextGenerator(Protocol):
-    """Servislerin bağımlı olduğu LLM arayüzü. Somut sınıf (GeminiGenerator) deps.py'de bağlanır."""
+    """Servislerin bağımlı olduğu LLM arayüzü. Somut zincir llm/factory.py'de kurulur."""
 
     def generate(self, *, system: str, prompt: str) -> GeneratedText: ...

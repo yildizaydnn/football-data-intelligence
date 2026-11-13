@@ -65,7 +65,7 @@ class StandingsSpec(_Spec):
 
 
 class StatisticSpec(_Spec):
-    key: str = Field(pattern=r"^[a-z][a-z_]*$")  # bizim anahtarımız, ör. shots_on_goal
+    key: str = Field(pattern=r"^[a-z][a-z_]*$")
     null_as_zero: bool = False  # sağlayıcı "olmadı" anlamında null gönderiyorsa
 
 

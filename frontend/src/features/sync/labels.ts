@@ -3,7 +3,6 @@ import type { SyncRun } from "@/lib/api/types";
 type Status = SyncRun["status"];
 type Trigger = SyncRun["trigger"];
 
-/** Teknik olmayan kullanıcı için durum adları. */
 export const RUN_LABEL: Record<Status, { short: string; dot: string; badge: string }> = {
   success: { short: "Başarılı", dot: "bg-win", badge: "bg-win/15 text-win" },
   partial: { short: "Kısmen", dot: "bg-amber", badge: "bg-amber/15 text-[#ffc877]" },

@@ -1,7 +1,8 @@
 """Maç istatistikleri: isteğe bağlı (maç detayı açılınca) çekilir ve kalıcı saklanır.
 
-Akış: DB'de varsa onu döndür → maç bitmemişse çekme → kota yedeğini koru → 1 istek at,
-sakla ve "çekildi" damgasını vur (API veri sağlamasa bile; aynı maç tekrar istenmez).
+Akış: DB'de varsa onu döndür → maç bitmemişse çekme → maç satırını kilitle (eşzamanlı ikinci
+istek beklesin) → günlük sınırı ve kota yedeğini koru → 1 istek at, sakla ve "çekildi" damgasını
+vur (API veri sağlamasa bile; aynı maç tekrar istenmez).
 """
 
 import logging
@@ -13,7 +14,12 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.enums import MatchStatus
-from app.core.exceptions import NotFoundError, ProviderError, QuotaExceededError
+from app.core.exceptions import (
+    NotFoundError,
+    ProviderError,
+    QuotaExceededError,
+    TooManyRequestsError,
+)
 from app.etl.transformers.statistics_transformer import StatisticsTransformer
 from app.models import Fixture
 from app.providers.base import MatchStatsProvider
@@ -69,12 +75,24 @@ class StatisticsService:
         if fixture.statistics_fetched_at is None:
             if fixture.status is not MatchStatus.FINISHED:
                 return FixtureStatistics(fixture, StatisticsAvailability.NOT_FINISHED, None, [])
-            self._fetch(fixture)
+            self.fixtures.lock(fixture.id)
+            if (
+                fixture.statistics_fetched_at is None
+            ):  # kilidi beklerken başka istek çekmiş olabilir
+                self._fetch(fixture)
         return self._stored(fixture)
 
     def _fetch(self, fixture: Fixture) -> None:
         if self.provider is None:
             raise RuntimeError("İstatistik çekmek için provider gerekli")
+        today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        if (
+            self.fixtures.count_statistics_fetched_since(today)
+            >= self.settings.statistics_daily_limit
+        ):
+            raise TooManyRequestsError(
+                "Bugünlük maç istatistiği sınırına ulaşıldı; bu maçınkiler yarın çekilebilir"
+            )
         limit = self.settings.api_football_daily_limit
         available = self.api_usage.remaining_budget(limit) - self.settings.statistics_quota_reserve
         if available < 1:

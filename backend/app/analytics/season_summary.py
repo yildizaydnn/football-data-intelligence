@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol
 
-from app.analytics.common import MatchLike, scored_in_order
+from app.analytics.common import MatchLike, in_rounds, scored_in_order
 from app.core.enums import MatchStatus
 
 
@@ -70,8 +70,7 @@ def summarize_season(
     `round_pattern` (lig kuralından) verilirse yalnızca eşleşen haftalar sayılır; puan
     tablosuyla aynı kapsam (ör. küme düşme play-off'u özete girmez).
     """
-    pattern = re.compile(round_pattern) if round_pattern else None
-    matches = [m for m in matches if pattern is None or pattern.search(m.round or "")]
+    matches = in_rounds(matches, round_pattern)
     statuses = Counter(m.status for m in matches)
     summary = SeasonSummary(
         total_matches=len(matches),

@@ -33,7 +33,8 @@ lig kuralları katmanı, veri bütünlüğü ve teknoloji seçimleri. Veritaban�
 | `GET /api/v1/leagues/{id}/standings` | Puan tablosu |
 | `GET /api/v1/leagues/{id}/overview` | Genel görünüm özeti |
 | `GET /api/v1/leagues/{id}/rules` | Ligin uygulanan kuralları (sıralama kriterleri, bölgeler, cezalar) |
-| `POST /api/v1/sync` | Veri güncelleme (isteğe bağlı `X-Sync-Token` ile korunur) |
+| `POST /api/v1/sync` | Arayüzden elle güncelleme: şifresiz, yalnızca maçlar, lig/sezon başına 10 dk bekleme süresi |
+| `POST /api/v1/sync/scheduled` | Dış zamanlayıcı (GitHub Actions) için: `X-Sync-Token` ister, takip edilen bütün ligleri zamanlanmış kurallarla günceller |
 | `GET /api/v1/sync/status`, `GET /api/v1/sync/usage` | Son senkronizasyon durumu, geçmiş, zamanlama, günlük API kotası |
 | `GET /api/v1/insights/status`, `POST /api/v1/leagues/{id}/insights` | AI karşılaştırma (Bonus C) |
 
@@ -51,8 +52,10 @@ Hepsi [.env.example](../.env.example) içinde açıklamalarıyla yer alır. Öne
 | `TRACKED_LEAGUES` | Zamanlanmış güncellemenin takip ettiği ligler (API id listesi) |
 | `DEFAULT_LEAGUE_ID`, `DEFAULT_SEASON` | Varsayılan lig ve zamanlanmış güncellemenin sezonu |
 | `SCHEDULER_ENABLED`, `SYNC_CRON` | Otomatik güncelleme açık mı, ne zaman (UTC cron) |
-| `SYNC_API_TOKEN` | Doluysa `POST /sync` bu token'ı `X-Sync-Token` başlığında ister |
+| `SYNC_API_TOKEN` | `POST /sync/scheduled` bu değeri `X-Sync-Token` başlığında ister; boşsa o uç kapalıdır |
+| `MANUAL_SYNC_COOLDOWN_MINUTES` | Elle güncellemede aynı lig/sezon için bekleme süresi (10) |
 | `STATISTICS_QUOTA_RESERVE` | Maç istatistikleri, kotanın son N isteğine dokunamaz |
+| `STATISTICS_DAILY_LIMIT` | Günde en fazla kaç maçın istatistiği çekilir (30) |
 | `GEMINI_API_KEY`, `OPENROUTER_API_KEY` | AI karşılaştırma; ikisi de boşsa özellik kapalı görünür |
 | `AI_DAILY_LIMIT` | Günlük en fazla yeni AI analizi |
 
@@ -74,6 +77,8 @@ Hepsi [.env.example](../.env.example) içinde açıklamalarıyla yer alır. Öne
 |---|---|
 | Günlük kota yetmez | Her güncellemeden önce kaç istek gerektiği hesaplanır (`next_sync_cost`), kota yetmiyorsa istek atılmadan reddedilir (429). Kalan kota, kendi sayacımız ile API'nin `x-ratelimit-requests-remaining` başlığından küçük olanıdır |
 | Kota rezervi | Maç istatistikleri kotanın son 10 isteğine dokunamaz; otomatik güncelleme her zaman çalışabilir |
+| Elle güncelleme tekrarları | Arayüzdeki şifresiz uç aynı lig/sezon için 10 dakikada bir çalışır (429 `too_many_requests`); tam yükleme (`full`) yalnızca CLI'dan yapılabilir |
+| Maç istatistikleri | Günde en fazla 30 maç; aynı maç için eşzamanlı iki istek gelirse maç satırı kilitlenir (`SELECT … FOR UPDATE`), ikinci istek ilkinin sonucunu kullanır |
 | Dakikalık sınır (önlem) | İstekler süreç genelinde ortak bir kayan pencereyle aralıklandırılır: son 60 sn'de `API_FOOTBALL_REQUESTS_PER_MINUTE` (10) istek atıldıysa en eskisinin pencereden çıkması beklenir. Yeniden denemeler de bu sayıma dahildir |
 | Dakikalık sınır yine aşılırsa (HTTP 429 veya yanıt içinde `rateLimit`) | Pencerenin sıfırlanması için 60 sn (veya API'nin `Retry-After` değeri kadar, en fazla 60 sn) beklenip yeniden denenir |
 | 5xx, zaman aşımı, bağlantı hatası | Kısa üstel bekleme ile en fazla 3 deneme (tenacity) |
@@ -96,8 +101,9 @@ güncellediği ve bir sonraki otomatik güncellemenin zamanı görünür.
   zamanında `TRACKED_LEAGUES` içindeki her lig sırayla ve birbirinden bağımsız güncellenir; biri hata
   verirse diğerleri yine çalışır.
 - **Yedek:** [.github/workflows/scheduled-sync.yml](../.github/workflows/scheduled-sync.yml). Backend
-  uyuyan bir ortamda çalışıyorsa GitHub Actions cron'u `POST /sync` çağırır. Varsayılan olarak
-  kapalıdır (`SCHEDULED_SYNC_ENABLED` repo değişkeni ile açılır).
+  uyuyan bir ortamda çalışıyorsa GitHub Actions cron'u `POST /sync/scheduled` çağırır (şifreli).
+  Uygulama içi zamanlayıcıyla aynı kurallar geçerlidir; yanıttaki `failed` alanı `true` ise iş
+  akışı hata verir. Varsayılan olarak kapalıdır (`SCHEDULED_SYNC_ENABLED` repo değişkeni ile açılır).
 
 ## Mimari
 
@@ -242,7 +248,7 @@ Takım analizi sayfasında iki takım seçilir; kısa, Türkçe, veriye dayalı 
 ## Testler ve CI
 
 ```bash
-make test     # backend: 243 test
+make test     # backend: 258 test
 make lint     # ruff + eslint + TypeScript
 ```
 

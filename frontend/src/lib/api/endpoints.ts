@@ -118,6 +118,6 @@ export const endpoints = {
   syncUsage: ({ leagueId, season }: LeagueScope) =>
     unwrap(api.GET("/api/v1/sync/usage", { params: { query: { league_id: leagueId, season } } })),
 
-  triggerSync: ({ leagueId, season, full = false }: LeagueScope & { full?: boolean }) =>
-    unwrap(api.POST("/api/v1/sync", { body: { league_id: leagueId, season, full } })),
+  triggerSync: ({ leagueId, season }: LeagueScope) =>
+    unwrap(api.POST("/api/v1/sync", { body: { league_id: leagueId, season } })),
 };

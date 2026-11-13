@@ -81,9 +81,9 @@ Telefon ve bilgisayarda düzgün görünür (responsive). Bütün ekranlar gerç
 | İstenen                         | Nasıl                                                                                                                                                                                                                                                                                             |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1. İlk veri yükleme             | Tek komutla, istenen lig ve sezon için (`make sync`)                                                                                                                                                                                                                                              |
-| 2. Elle güncelleme              | Panelin sağ üstündeki **"Şimdi güncelle"** butonu (`POST /api/v1/sync`)                                                                                                                                                                                                                           |
-| 3. Zamanlanmış güncelleme       | Her sabah 07:00'de (Türkiye saati) kendiliğinden çalışır (sunucu içinde zamanlayıcı, cron ile ayarlanabilir)                                                                                                                                                                                      |
-| 4. Gereksiz isteklerden kaçınma | Bitmiş sezonlar için istek atılmaz. Lig ve takım bilgisi bir kez alınır. Maç istatistikleri her maç için bir kez alınır                                                                                                                                                                           |
+| 2. Elle güncelleme              | Panelin sağ üstündeki **"Şimdi güncelle"** butonu (`POST /api/v1/sync`). Herkese açık olduğu için aynı lig ve sezon 10 dakikada bir güncellenebilir (cooldown) |
+| 3. Zamanlanmış güncelleme       | Her gün sabah saatlerinde kendiliğinden çalışır (sunucu içinde zamanlayıcı, cron ile ayarlanabilir). Yedek olarak GitHub Actions şifreli ayrı bir uçtan aynı işi tetikleyebilir |
+| 4. Gereksiz isteklerden kaçınma | Bitmiş sezonlar için istek atılmaz. Lig ve takım bilgisi bir kez alınır. Maç istatistikleri her maç için bir kez ve günde en fazla 30 maç için alınır |
 | 5. İstek sınırı ve hatalar      | Günlük hak yetmeyecekse güncelleme hiç başlamaz (kota kontrolü). İstekler dakikalık sınıra takılmayacak aralıkla atılır (rate-limit); yine de takılırsa bir dakika beklenip yeniden denenir (HTTP 429). Veri kaynağı geçici hata verirse birkaç kez daha denenir (retry, 5xx ve zaman aşımı için) |
 | 6. Veri kaynağına ulaşılamazsa  | Site son kaydedilen veriyle çalışmaya devam eder. Yarıda kalan güncelleme mevcut veriyi bozmaz, tamamen geri alınır (transaction rollback)                                                                                                                                                        |
 | 7. Kullanım takibi              | Panelin üstünde günün kalan istek hakkı (kota) görünür. Güncelleme geçmişinde her güncellemenin kaç istek harcadığı yazar (`api_usage`, `sync_runs`)                                                                                                                                              |
@@ -100,7 +100,7 @@ Neden böyle:
 
 - **Günde bir kez yeterli.** Ücretsiz pakette canlı skor yok; skor maç bitince kesinleşir. Gün
   içinde daha sık sormak yeni bir şey getirmez.
-- **Neden sabah 07:00?** Bir önceki günün bütün maçları bitmiş olur. Günlük istek hakkı da gece
+- **Neden sabah?** Bir önceki günün bütün maçları bitmiş olur. Günlük istek hakkı da gece
   yarısı yenilendiği için güncelleme dolu hakla çalışır.
 - **Neden her seferinde bütün sezon?** Sadece son günleri istemek de 1 istek tutuyor. Bütün sezonu
   almak, ertelenen veya tarihi değişen maçları da yakalıyor.
@@ -122,7 +122,7 @@ Neden böyle:
 - İstenen teknolojiler aynen kullanıldı: Next.js, React, TypeScript, FastAPI, PostgreSQL,
   Tailwind CSS, shadcn/ui. Eklenen yardımcı araçlar ve nedenleri:
   [teknik ayrıntılar](docs/technical-details.md#teknoloji-seçimleri).
-- **Otomatik testler:** 243 test. Puan tablosunun doğru sıralanması (eşitlik durumları dahil),
+- **Otomatik testler:** 258 test. Puan tablosunun doğru sıralanması (eşitlik durumları dahil),
   takım istatistikleri, aynı maçın iki kez kaydedilmemesi, istek sınırı ve hata durumları,
   bütün endpoint'ler (pytest; birim ve gerçek PostgreSQL ile entegrasyon testleri). Kodda her
   değişiklikte GitHub Actions üzerinde otomatik çalışırlar (CI).

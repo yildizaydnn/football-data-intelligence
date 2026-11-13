@@ -9,7 +9,6 @@ from app.schemas.common import Schema
 class SyncRequest(BaseModel):
     league_id: int | None = None  # boşsa varsayılan lig (DEFAULT_LEAGUE_ID)
     season: int | None = None  # boşsa varsayılan sezon
-    full: bool = False  # True: lig/sezon/takımlar da yenilenir (3 istek), False: sadece maçlar (1)
 
 
 class SyncRunOut(Schema):
@@ -25,6 +24,18 @@ class SyncRunOut(Schema):
     updated: int
     skipped: int
     error_message: str | None
+
+
+class TrackedSyncOut(Schema):
+    league_external_id: int
+    run: SyncRunOut | None
+    error: str | None  # sync başlamadan reddedildiyse nedeni (kota yetersiz, başka sync çalışıyor)
+
+
+class ScheduledSyncOut(Schema):
+    results: list[TrackedSyncOut]
+    # Başlayıp başarısız olan sync var mı; dış cron bunu hata sayar.
+    failed: bool
 
 
 class SyncScheduleOut(Schema):

@@ -27,14 +27,19 @@ class ProviderError(AppError):
 
 
 class QuotaExceededError(AppError):
-    """Günlük API istek bütçesi yetersiz."""
-
     status_code = 429
     code = "quota_exceeded"
 
     def __init__(self, message: str, *, requests_made: int = 0) -> None:
         super().__init__(message)
         self.requests_made = requests_made
+
+
+class TooManyRequestsError(AppError):
+    """Kullanıcı kaynaklı sık istek (ör. elle güncellemede bekleme süresi dolmadı)."""
+
+    status_code = 429
+    code = "too_many_requests"
 
 
 class ConflictError(AppError):

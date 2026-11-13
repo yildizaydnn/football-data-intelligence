@@ -3,7 +3,6 @@ import type { ComponentProps, ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-/** Tasarımdaki koyu yeşil kart. */
 export function Panel({ className, ...props }: ComponentProps<"section">) {
   return <section className={cn("rounded-[20px] border bg-card p-5 sm:p-6", className)} {...props} />;
 }

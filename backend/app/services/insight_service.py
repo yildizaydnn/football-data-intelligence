@@ -11,6 +11,7 @@ from datetime import UTC, datetime, time
 
 from sqlalchemy.orm import Session
 
+from app.analytics.common import in_rounds
 from app.analytics.comparison import TeamComparison, compare_teams
 from app.core.config import Settings
 from app.core.exceptions import AiNotConfiguredError, BadRequestError, QuotaExceededError
@@ -79,16 +80,17 @@ class InsightService:
             raise BadRequestError("Karşılaştırma için iki farklı takım seçin")
         league = self.leagues.get_league(league_id)
         season = self.leagues.resolve_season(league_id, season_year)
-        in_season = {t.id: t for t in self.teams.list_by_season(season.id)}
+        context = self.rules.resolve(league.external_id, season.year)
+        rounds = context.standings.include_rounds
+        in_season = {t.id: t for t in self.teams.list_by_season(season.id, rounds)}
         if team_x_id not in in_season or team_y_id not in in_season:
             raise BadRequestError("Takımlardan biri bu sezonda ligde yer almıyor")
 
         # Çift sıralı: (A, B) ile (B, A) aynı analizdir.
         team_a, team_b = sorted((in_season[team_x_id], in_season[team_y_id]), key=lambda t: t.id)
-        points = self.rules.resolve(league.external_id, season.year).points_table
-        comparison = compare_teams(
-            team_a.id, team_b.id, self.fixtures.list_finished(season.id), points
-        )
+        # Takım analizi ve puan tablosuyla aynı maçlar (kural dışı turlar sayılmaz).
+        matches = in_rounds(self.fixtures.list_finished(season.id), rounds)
+        comparison = compare_teams(team_a.id, team_b.id, matches, context.points_table)
         facts = build_facts(
             comparison,
             league=league.name,

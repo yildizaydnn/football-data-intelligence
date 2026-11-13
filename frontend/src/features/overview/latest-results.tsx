@@ -59,7 +59,6 @@ function ResultCard({ fixture, delay }: { fixture: Fixture; delay: number }) {
   );
 }
 
-/** Skorbord satırı: logo · takım · gol (kazanan vurgulu). */
 function ScoreLine({
   team,
   goals,

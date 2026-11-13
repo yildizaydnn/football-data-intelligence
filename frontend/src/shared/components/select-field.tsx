@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 export type Option = { value: string; label: string };
 
-/** Etiketli seçim kutusu (tasarımdaki koyu, yuvarlak köşeli select). */
 export function SelectField({
   label,
   value,

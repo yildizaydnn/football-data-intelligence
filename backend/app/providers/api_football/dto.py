@@ -84,6 +84,7 @@ class FixtureLeague(_DTO):
 class FixtureTeam(_DTO):
     id: int | None = None
     name: str | None = None
+    logo: str | None = None
 
 
 class FixtureTeams(_DTO):
