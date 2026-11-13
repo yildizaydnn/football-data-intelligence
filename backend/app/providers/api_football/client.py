@@ -15,6 +15,7 @@ from tenacity import (
 from tenacity.wait import WaitBaseT
 
 from app.core.exceptions import ProviderError, QuotaExceededError
+from app.providers.api_football.rate_limiter import RateLimiter
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ class ApiFootballClient:
         wait: WaitBaseT | None = None,
         rate_limit_wait: float = RATE_LIMIT_WINDOW_SECONDS,
         sleep: Callable[[float], None] = time.sleep,
+        limiter: RateLimiter | None = None,
     ) -> None:
         self._http = httpx.Client(
             base_url=base_url,
@@ -65,6 +67,7 @@ class ApiFootballClient:
         self._wait = wait or wait_exponential(multiplier=0.5, max=8)
         self._rate_limit_wait = rate_limit_wait
         self._sleep = sleep
+        self._limiter = limiter
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> ApiResult:
         attempts = 0
@@ -72,6 +75,8 @@ class ApiFootballClient:
 
         def send() -> dict[str, Any]:
             nonlocal attempts, last_remaining
+            if self._limiter and (waited := self._limiter.acquire()):
+                logger.info("Dakikalık sınır için %.1f sn beklendi", waited)
             attempts += 1
             try:
                 response = self._http.get(path, params=params)

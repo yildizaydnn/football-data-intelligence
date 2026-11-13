@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     api_football_daily_limit: int = 100
     api_football_timeout_seconds: float = 10.0
     api_football_max_attempts: int = 3
+    # Ücretsiz paket dakikada 10 istek kabul eder; istekler buna göre aralıklandırılır.
+    api_football_requests_per_minute: int = 10
 
     default_league_id: int = 203  # Süper Lig; parametresiz sync ve CLI için
     default_season: int = 2024

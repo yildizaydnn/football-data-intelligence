@@ -226,6 +226,27 @@ class TestClientErrors:
 
         assert sleeps == [0]  # wait_none: dakika beklemesi yalnızca rate limit için
 
+    def test_every_attempt_takes_a_rate_limit_slot(
+        self, api: respx.MockRouter, sleeps: list[float]
+    ) -> None:
+        class CountingLimiter:
+            calls = 0
+
+            def acquire(self) -> float:
+                self.calls += 1
+                return 0.0
+
+        limiter = CountingLimiter()
+        api.get("/leagues").mock(
+            side_effect=[httpx.Response(503), httpx.Response(200, json=load_json("leagues.json"))]
+        )
+        with ApiFootballClient(
+            BASE_URL, "secret", wait=wait_none(), sleep=sleeps.append, limiter=limiter
+        ) as client:
+            client.get("/leagues")
+
+        assert limiter.calls == 2  # yeniden deneme de bir istek hakkı harcar
+
     def test_invalid_json_raises_provider_error(
         self, client: ApiFootballClient, api: respx.MockRouter
     ) -> None:

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Docker imajı için yalnızca çalışmaya gereken dosyaları .next/standalone'a toplar.
+  output: "standalone",
   cacheComponents: true,
   partialPrefetching: true,
   images: {

@@ -9,6 +9,7 @@ from app.core.config import Settings
 from app.core.exceptions import ProviderError
 from app.providers.api_football.client import ApiFootballClient, ApiResult
 from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamStatisticsDTO
+from app.providers.api_football.rate_limiter import shared_rate_limiter
 from app.providers.base import ProviderResponse
 
 
@@ -69,5 +70,6 @@ def build_api_football_provider(settings: Settings) -> Iterator[ApiFootballProvi
         settings.api_football_key,
         timeout=settings.api_football_timeout_seconds,
         max_attempts=settings.api_football_max_attempts,
+        limiter=shared_rate_limiter(settings.api_football_requests_per_minute),
     ) as client:
         yield ApiFootballProvider(client)

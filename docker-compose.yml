@@ -1,6 +1,9 @@
+# Tüm sistem:      docker compose up -d --build   → http://localhost:3000
+# Sadece veritabanı (yerel geliştirme): docker compose up -d db
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-football}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-football}
@@ -14,6 +17,35 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Container içinden veritabanına servis adıyla bağlanılır (localhost değil).
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-football}:${POSTGRES_PASSWORD:-football}@db:5432/${POSTGRES_DB:-football}
+      # Arayüzün açıldığı adres(ler); farklı port veya alan adında burası güncellenmeli.
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000"]}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
   pgdata:

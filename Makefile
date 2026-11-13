@@ -1,4 +1,4 @@
-.PHONY: help install db-up db-down dev web migrate migration sync api-types lint format test
+.PHONY: help install up logs db-up db-down dev web migrate migration sync api-types lint format test
 
 BACKEND := cd backend &&
 
@@ -9,10 +9,16 @@ install: ## Backend ve frontend bağımlılıklarını kur
 	$(BACKEND) uv sync
 	cd frontend && pnpm install
 
+up: ## Tüm sistemi Docker ile başlat (veritabanı + backend + frontend)
+	docker compose up -d --build
+
+logs: ## Docker container loglarını izle
+	docker compose logs -f backend frontend
+
 db-up: ## PostgreSQL'i başlat
 	docker compose up -d db
 
-db-down: ## Container'ları durdur
+db-down: ## Bütün container'ları durdur (veriler korunur)
 	docker compose down
 
 dev: ## Backend'i geliştirme modunda çalıştır
