@@ -1011,6 +1011,131 @@
         }
       }
     },
+    "/api/v1/insights/status": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Ai Status",
+        "description": "AI analizi açık mı, bugün kaç analiz üretildi.",
+        "operationId": "get_ai_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiStatusOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/leagues/{league_id}/insights": {
+      "post": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Create Insight",
+        "description": "İki takımın AI karşılaştırması. Aynı veri için önbellekten döner (LLM çağrılmaz).",
+        "operationId": "create_insight",
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsightRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1039,6 +1164,29 @@
   },
   "components": {
     "schemas": {
+      "AiStatusOut": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "daily_limit": {
+            "type": "integer",
+            "title": "Daily Limit"
+          },
+          "generated_today": {
+            "type": "integer",
+            "title": "Generated Today"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "daily_limit",
+          "generated_today"
+        ],
+        "title": "AiStatusOut"
+      },
       "ErrorDetail": {
         "properties": {
           "code": {
@@ -1351,6 +1499,135 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HeadToHeadOut": {
+        "properties": {
+          "matches": {
+            "type": "integer",
+            "title": "Matches"
+          },
+          "team_a_wins": {
+            "type": "integer",
+            "title": "Team A Wins"
+          },
+          "draws": {
+            "type": "integer",
+            "title": "Draws"
+          },
+          "team_b_wins": {
+            "type": "integer",
+            "title": "Team B Wins"
+          },
+          "team_a_goals": {
+            "type": "integer",
+            "title": "Team A Goals"
+          },
+          "team_b_goals": {
+            "type": "integer",
+            "title": "Team B Goals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matches",
+          "team_a_wins",
+          "draws",
+          "team_b_wins",
+          "team_a_goals",
+          "team_b_goals"
+        ],
+        "title": "HeadToHeadOut"
+      },
+      "InsightOut": {
+        "properties": {
+          "season": {
+            "type": "integer",
+            "title": "Season"
+          },
+          "team_a": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "team_b": {
+            "$ref": "#/components/schemas/TeamRef"
+          },
+          "team_a_facts": {
+            "$ref": "#/components/schemas/TeamFactsOut"
+          },
+          "team_b_facts": {
+            "$ref": "#/components/schemas/TeamFactsOut"
+          },
+          "head_to_head": {
+            "$ref": "#/components/schemas/HeadToHeadOut"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          },
+          "unverified_numbers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unverified Numbers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "season",
+          "team_a",
+          "team_b",
+          "team_a_facts",
+          "team_b_facts",
+          "head_to_head",
+          "content",
+          "model",
+          "generated_at",
+          "cached",
+          "unverified_numbers"
+        ],
+        "title": "InsightOut"
+      },
+      "InsightRequest": {
+        "properties": {
+          "team_a_id": {
+            "type": "integer",
+            "title": "Team A Id"
+          },
+          "team_b_id": {
+            "type": "integer",
+            "title": "Team B Id"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Season"
+          }
+        },
+        "type": "object",
+        "required": [
+          "team_a_id",
+          "team_b_id"
+        ],
+        "title": "InsightRequest"
       },
       "LeagueOut": {
         "properties": {
@@ -2334,6 +2611,63 @@
           "can_sync"
         ],
         "title": "SyncUsageOut"
+      },
+      "TeamFactsOut": {
+        "properties": {
+          "played": {
+            "type": "integer",
+            "title": "Played"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "win_rate": {
+            "type": "number",
+            "title": "Win Rate"
+          },
+          "avg_goals_for": {
+            "type": "number",
+            "title": "Avg Goals For"
+          },
+          "avg_goals_against": {
+            "type": "number",
+            "title": "Avg Goals Against"
+          },
+          "clean_sheets": {
+            "type": "integer",
+            "title": "Clean Sheets"
+          },
+          "form": {
+            "items": {
+              "$ref": "#/components/schemas/MatchResult"
+            },
+            "type": "array",
+            "title": "Form"
+          },
+          "home_points": {
+            "type": "integer",
+            "title": "Home Points"
+          },
+          "away_points": {
+            "type": "integer",
+            "title": "Away Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "played",
+          "points",
+          "win_rate",
+          "avg_goals_for",
+          "avg_goals_against",
+          "clean_sheets",
+          "form",
+          "home_points",
+          "away_points"
+        ],
+        "title": "TeamFactsOut",
+        "description": "Analizin dayandığı sayılar; arayüz metnin yanında gösterir (karşılaştırılabilir olsun)."
       },
       "TeamOut": {
         "properties": {

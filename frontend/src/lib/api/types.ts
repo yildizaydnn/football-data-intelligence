@@ -20,6 +20,8 @@ export type SyncState = Schemas["SyncStateOut"];
 export type SyncUsage = Schemas["SyncUsageOut"];
 export type Rules = Schemas["RulesOut"];
 export type FixtureStatistics = Schemas["FixtureStatisticsOut"];
+export type Insight = Schemas["InsightOut"];
+export type TeamFacts = Schemas["TeamFactsOut"];
 export type StatLine = Schemas["StatLineOut"];
 export type Zone = Schemas["ZoneOut"];
 

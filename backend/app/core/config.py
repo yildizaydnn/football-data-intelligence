@@ -37,6 +37,22 @@ class Settings(BaseSettings):
     # Maç istatistikleri isteğe bağlı çekilir; günlük kotanın son N isteği sync'e ayrılır.
     statistics_quota_reserve: int = 10
 
+    # AI karşılaştırma (Bonus C). Anahtar yoksa özellik kapalıdır.
+    gemini_api_key: str = ""
+    # Sırayla denenir: biri yoğunsa (429/503) sıradaki kullanılır.
+    ai_models: list[str] = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"]
+    # Yedek sağlayıcı: Gemini başarısız olursa OpenRouter'daki modeller sırayla denenir.
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # Ücretsiz modeller (2026-11 itibarıyla); Türkçe kalitesi ve hıza göre sıralı.
+    openrouter_models: list[str] = [
+        "google/gemma-4-26b-a4b-it:free",
+        "google/gemma-4-31b-it:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+    ]
+    ai_daily_limit: int = 50  # günde en fazla yeni analiz (önbellekten dönenler sayılmaz)
+    ai_timeout_seconds: float = 30.0
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -284,3 +284,42 @@ def test_fixture_statistics_endpoint(client: TestClient, provider: FakeProvider,
 
     assert body["availability"] == "available"
     assert body["lines"] == [{"key": "possession", "home": 48.0, "away": 52.0}]
+
+
+def test_insight_endpoints(client: TestClient, league_id: int) -> None:
+    from app.api.deps import get_text_generator
+    from app.providers.llm.base import GeneratedText
+
+    class Fake:
+        def generate(self, *, system: str, prompt: str) -> GeneratedText:
+            return GeneratedText("Fenerbahçe 3 puanla önde.", "fake")
+
+    client.app.dependency_overrides[get_text_generator] = lambda: Fake()
+    teams = {t["name"]: t["id"] for t in client.get(f"/api/v1/leagues/{league_id}/teams").json()}
+
+    status = client.get("/api/v1/insights/status").json()
+    body = client.post(
+        f"/api/v1/leagues/{league_id}/insights",
+        json={"team_a_id": teams["Fenerbahçe"], "team_b_id": teams["Galatasaray"]},
+    ).json()
+
+    assert status["enabled"] is True
+    assert body["content"] == "Fenerbahçe 3 puanla önde."
+    assert body["team_a"]["name"] == "Galatasaray"  # çift sıralı döner
+    assert body["head_to_head"]["matches"] == 1
+    assert body["unverified_numbers"] == []
+
+
+def test_insight_disabled_returns_503(client: TestClient, league_id: int) -> None:
+    from app.api.deps import get_text_generator
+
+    client.app.dependency_overrides[get_text_generator] = lambda: None
+    teams = [t["id"] for t in client.get(f"/api/v1/leagues/{league_id}/teams").json()]
+
+    response = client.post(
+        f"/api/v1/leagues/{league_id}/insights",
+        json={"team_a_id": teams[0], "team_b_id": teams[1]},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "ai_not_configured"

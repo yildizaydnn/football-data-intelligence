@@ -7,6 +7,7 @@ from app.models.league import League
 from app.models.season import Season
 from app.models.sync_run import SyncRun
 from app.models.team import Team
+from app.models.team_insight import TeamInsight
 
 __all__ = [
     "ApiUsage",
@@ -18,4 +19,5 @@ __all__ = [
     "Season",
     "SyncRun",
     "Team",
+    "TeamInsight",
 ]

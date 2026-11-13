@@ -16,12 +16,15 @@ from app.core.database import get_session
 from app.core.exceptions import UnauthorizedError
 from app.providers.api_football.provider import build_api_football_provider
 from app.providers.base import FootballDataProvider
+from app.providers.llm.base import TextGenerator
+from app.providers.llm.factory import build_text_generator
 from app.repositories.fixture_repository import FixtureRepository
 from app.repositories.league_repository import LeagueRepository, SeasonRepository
 from app.repositories.sync_repository import SyncRunRepository
 from app.repositories.team_repository import TeamRepository
 from app.rules.engine import RuleEngine, get_rule_engine
 from app.services.fixture_service import FixtureService
+from app.services.insight_service import InsightService
 from app.services.league_service import LeagueService
 from app.services.overview_service import OverviewService
 from app.services.rules_service import RulesService
@@ -113,6 +116,22 @@ def get_statistics_service(
     return StatisticsService(session, settings, rules, provider)
 
 
+def get_text_generator(settings: SettingsDep) -> Iterator[TextGenerator | None]:
+    with build_text_generator(settings) as generator:
+        yield generator
+
+
+def get_insight_service(
+    session: SessionDep,
+    settings: SettingsDep,
+    leagues: LeagueServiceDep,
+    rules: RuleEngineDep,
+    generator: Annotated[TextGenerator | None, Depends(get_text_generator)],
+) -> InsightService:
+    return InsightService(session, settings, leagues, rules, generator)
+
+
+InsightServiceDep = Annotated[InsightService, Depends(get_insight_service)]
 FixtureServiceDep = Annotated[FixtureService, Depends(get_fixture_service)]
 StatisticsServiceDep = Annotated[StatisticsService, Depends(get_statistics_service)]
 TeamStatsServiceDep = Annotated[TeamStatsService, Depends(get_team_stats_service)]

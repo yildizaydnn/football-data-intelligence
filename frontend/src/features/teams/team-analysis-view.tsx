@@ -8,6 +8,7 @@ import { TeamCrest } from "@/shared/components/team-crest";
 import { formatSeason } from "@/shared/lib/format";
 import { nameLang } from "@/shared/lib/locale";
 
+import { AiInsightPanel } from "./ai-insight-panel";
 import { GoalsChart } from "./goals-chart";
 import { HomeAway } from "./home-away";
 import { useTeamStats } from "./hooks";
@@ -52,6 +53,9 @@ export function TeamAnalysisView() {
             <PointsChart stats={stats} />
           </div>
           <HomeAway stats={stats} />
+          <QueryBoundary fallback={<PanelSkeleton className="h-[180px]" />} inline>
+            <AiInsightPanel teamId={stats.team.id} />
+          </QueryBoundary>
         </>
       )}
     </div>

@@ -258,6 +258,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/insights/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ai Status
+         * @description AI analizi açık mı, bugün kaç analiz üretildi.
+         */
+        get: operations["get_ai_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leagues/{league_id}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Insight
+         * @description İki takımın AI karşılaştırması. Aynı veri için önbellekten döner (LLM çağrılmaz).
+         */
+        post: operations["create_insight"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -279,6 +319,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AiStatusOut */
+        AiStatusOut: {
+            /** Enabled */
+            enabled: boolean;
+            /** Daily Limit */
+            daily_limit: number;
+            /** Generated Today */
+            generated_today: number;
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -372,6 +421,53 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HeadToHeadOut */
+        HeadToHeadOut: {
+            /** Matches */
+            matches: number;
+            /** Team A Wins */
+            team_a_wins: number;
+            /** Draws */
+            draws: number;
+            /** Team B Wins */
+            team_b_wins: number;
+            /** Team A Goals */
+            team_a_goals: number;
+            /** Team B Goals */
+            team_b_goals: number;
+        };
+        /** InsightOut */
+        InsightOut: {
+            /** Season */
+            season: number;
+            team_a: components["schemas"]["TeamRef"];
+            team_b: components["schemas"]["TeamRef"];
+            team_a_facts: components["schemas"]["TeamFactsOut"];
+            team_b_facts: components["schemas"]["TeamFactsOut"];
+            head_to_head: components["schemas"]["HeadToHeadOut"];
+            /** Content */
+            content: string;
+            /** Model */
+            model: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Cached */
+            cached: boolean;
+            /** Unverified Numbers */
+            unverified_numbers: string[];
+        };
+        /** InsightRequest */
+        InsightRequest: {
+            /** Team A Id */
+            team_a_id: number;
+            /** Team B Id */
+            team_b_id: number;
+            /** Season */
+            season?: number | null;
         };
         /** LeagueOut */
         LeagueOut: {
@@ -693,6 +789,30 @@ export interface components {
             next_sync_cost: number;
             /** Can Sync */
             can_sync: boolean;
+        };
+        /**
+         * TeamFactsOut
+         * @description Analizin dayandığı sayılar; arayüz metnin yanında gösterir (karşılaştırılabilir olsun).
+         */
+        TeamFactsOut: {
+            /** Played */
+            played: number;
+            /** Points */
+            points: number;
+            /** Win Rate */
+            win_rate: number;
+            /** Avg Goals For */
+            avg_goals_for: number;
+            /** Avg Goals Against */
+            avg_goals_against: number;
+            /** Clean Sheets */
+            clean_sheets: number;
+            /** Form */
+            form: components["schemas"]["MatchResult"][];
+            /** Home Points */
+            home_points: number;
+            /** Away Points */
+            away_points: number;
         };
         /** TeamOut */
         TeamOut: {
@@ -1379,6 +1499,106 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ai_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiStatusOut"];
+                };
+            };
+        };
+    };
+    create_insight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                league_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InsightRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

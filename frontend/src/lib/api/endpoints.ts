@@ -90,6 +90,21 @@ export const endpoints = {
       }),
     ),
 
+  aiStatus: () => unwrap(api.GET("/api/v1/insights/status")),
+
+  createInsight: ({
+    leagueId,
+    season,
+    teamAId,
+    teamBId,
+  }: LeagueScope & { teamAId: number; teamBId: number }) =>
+    unwrap(
+      api.POST("/api/v1/leagues/{league_id}/insights", {
+        params: { path: { league_id: leagueId } },
+        body: { team_a_id: teamAId, team_b_id: teamBId, season },
+      }),
+    ),
+
   syncStatus: () => unwrap(api.GET("/api/v1/sync/status")),
 
   rules: ({ leagueId, season }: LeagueScope) =>

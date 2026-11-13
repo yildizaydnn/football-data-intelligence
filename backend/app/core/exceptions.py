@@ -49,3 +49,13 @@ class SyncInProgressError(ConflictError):
 class UnauthorizedError(AppError):
     status_code = 401
     code = "unauthorized"
+
+
+class BadRequestError(AppError):
+    status_code = 400
+    code = "bad_request"
+
+
+class AiNotConfiguredError(AppError):
+    status_code = 503
+    code = "ai_not_configured"
