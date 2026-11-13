@@ -23,8 +23,10 @@ export function LeagueSeasonSelect() {
     router.push(`/leagues/${id}${keep}`);
   };
 
+  // Aynı sayfada (takım analizinde aynı takımda) kalınır; takım o sezonda ligde değilse
+  // sayfa bunu söyler ve takım seçiciyi gösterir.
   const switchSeason = (year: string) => {
-    const path = pathname.replace(`/leagues/${leagueId}`, "").replace(/\/teams\/\d+$/, "/teams");
+    const path = pathname.replace(`/leagues/${leagueId}`, "");
     router.push(href(path, { season: year }));
   };
 

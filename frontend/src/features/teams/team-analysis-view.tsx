@@ -17,8 +17,16 @@ import { SummaryCards } from "./summary-cards";
 import { TeamPicker } from "./team-picker";
 
 export function TeamAnalysisView() {
-  const { leagueId, season, teamId } = useDashboardParams();
-  const stats = useTeamStats(leagueId, teamId!, season);
+  const { teamId } = useDashboardParams();
+  // Takım sayfasından ayrılırken (ör. /teams'e) bileşen bir kez daha render olabilir;
+  // URL'de takım yoksa istek atılmaz.
+  if (teamId === undefined) return null;
+  return <TeamAnalysis teamId={teamId} />;
+}
+
+function TeamAnalysis({ teamId }: { teamId: number }) {
+  const { leagueId, season } = useDashboardParams();
+  const stats = useTeamStats(leagueId, teamId, season);
   const country = useLeagues().find((l) => l.id === leagueId)?.country;
 
   return (

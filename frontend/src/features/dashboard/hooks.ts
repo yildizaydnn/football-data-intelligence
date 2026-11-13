@@ -30,7 +30,9 @@ export function useDashboardParams() {
   const leagueId = Number(params.leagueId);
   const seasonParam = search.get("season");
   const season = seasonParam ? Number(seasonParam) : undefined;
-  const teamId = params.teamId ? Number(params.teamId) : undefined;
+  const parsedTeam = Number(params.teamId);
+  // URL'de takım yoksa (ör. /teams) ya da sayı değilse undefined: istek atılmaz.
+  const teamId = Number.isInteger(parsedTeam) && parsedTeam > 0 ? parsedTeam : undefined;
 
   const href = useCallback(
     (path = "", query: Query = {}) => {
