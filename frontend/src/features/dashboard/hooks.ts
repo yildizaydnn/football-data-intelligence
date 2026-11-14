@@ -18,6 +18,12 @@ export const seasonsQuery = (leagueId: number) =>
 export const useLeagues = () => useSuspenseQuery(leaguesQuery()).data;
 export const useSeasons = (leagueId: number) => useSuspenseQuery(seasonsQuery(leagueId)).data;
 
+/** Ekranda görünen sezon: URL'deki; yoksa backend gibi güncel sezon, o da yoksa verisi olan en yeni. */
+export function useDisplayedSeason(leagueId: number, season?: number) {
+  const seasons = useSeasons(leagueId);
+  return season ?? (seasons.find((s) => s.is_current) ?? seasons[0])?.year;
+}
+
 type Query = Record<string, string | number | undefined | null>;
 
 /**

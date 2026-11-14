@@ -602,7 +602,7 @@
           "fixtures"
         ],
         "summary": "Get Fixture Statistics",
-        "description": "Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.\n\nKotanın son `STATISTICS_QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).",
+        "description": "Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.\n\nKotanın son `QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).",
         "operationId": "get_fixture_statistics",
         "parameters": [
           {
@@ -2692,6 +2692,10 @@
             "type": "integer",
             "title": "Next Sync Cost"
           },
+          "reserve": {
+            "type": "integer",
+            "title": "Reserve"
+          },
           "can_sync": {
             "type": "boolean",
             "title": "Can Sync"
@@ -2705,6 +2709,7 @@
           "remaining",
           "provider_remaining",
           "next_sync_cost",
+          "reserve",
           "can_sync"
         ],
         "title": "SyncUsageOut"

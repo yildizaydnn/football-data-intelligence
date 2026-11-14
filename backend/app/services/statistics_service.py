@@ -94,7 +94,7 @@ class StatisticsService:
                 "Bugünlük maç istatistiği sınırına ulaşıldı; bu maçınkiler yarın çekilebilir"
             )
         limit = self.settings.api_football_daily_limit
-        available = self.api_usage.remaining_budget(limit) - self.settings.statistics_quota_reserve
+        available = self.api_usage.remaining_budget(limit) - self.settings.quota_reserve
         if available < 1:
             raise QuotaExceededError(
                 "Bugünkü kotanın kalanı otomatik güncellemelere ayrıldı; "

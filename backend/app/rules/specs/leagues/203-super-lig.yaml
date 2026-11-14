@@ -23,6 +23,9 @@ seasons:
       - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
       - { from: -4, to: -1, kind: relegation, label: Küme düşme }
   2024:
+    standings:
+      deductions:
+        3563: 12 # Adana Demirspor (FIFA transfer yasağı cezaları)
     zones:
       - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
       - { from: -4, to: -1, kind: relegation, label: Küme düşme }

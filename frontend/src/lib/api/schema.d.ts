@@ -154,7 +154,7 @@ export interface paths {
          * Get Fixture Statistics
          * @description Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.
          *
-         *     Kotanın son `STATISTICS_QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).
+         *     Kotanın son `QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).
          */
         get: operations["get_fixture_statistics"];
         put?: never;
@@ -815,6 +815,8 @@ export interface components {
             provider_remaining: number | null;
             /** Next Sync Cost */
             next_sync_cost: number;
+            /** Reserve */
+            reserve: number;
             /** Can Sync */
             can_sync: boolean;
         };

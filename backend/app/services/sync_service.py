@@ -38,10 +38,11 @@ class SyncUsage:
     remaining: int  # bizim sayaç ile API header'ından küçük olanı
     provider_remaining: int | None
     next_sync_cost: int  # varsayılan lig/sezon için bir sonraki sync'in istek sayısı
+    reserve: int  # elle güncellemenin dokunamayacağı, otomatik güncellemeye ayrılan kısım
 
     @property
     def can_sync(self) -> bool:
-        return self.remaining >= self.next_sync_cost
+        return self.remaining - self.reserve >= self.next_sync_cost
 
 
 @dataclass(frozen=True)
@@ -117,7 +118,9 @@ class SyncService:
             self.session.commit()
             logger.info("Zamanlanmış sync atlandı: %s", reason)
             return run
-        self._check_budget(pipeline.estimate_requests(league_external_id, season, full=full))
+        self._check_budget(
+            pipeline.estimate_requests(league_external_id, season, full=full), trigger
+        )
 
         run = self.sync_runs.try_start(trigger, league_external_id, season)
         if run is None:
@@ -150,11 +153,10 @@ class SyncService:
     def run_manual(self, league_id: int | None = None, season: int | None = None) -> SyncRun:
         """Arayüzden tetiklenen sync: ekranda görüntülenen lig (iç id) ve sezon için.
 
-        Herkese açık bir uç olduğu için aynı lig/sezon için bekleme süresi uygulanır; tam yükleme
-        (referans veriyi yenileme) yalnızca CLI'dan yapılır.
+        Herkese açık bir uç olduğu için yalnızca verisi yüklü sezonlar güncellenir ve aynı
+        lig/sezon için bekleme süresi uygulanır; yeni sezon yükleme ve tam yükleme CLI'dan yapılır.
         """
-        league_external_id = self._external_league(league_id) or self.settings.default_league_id
-        season = season or self.settings.default_season
+        league_external_id, season = self._manual_scope(league_id, season)
         self._check_cooldown(league_external_id, season)
         return self.run(SyncTrigger.MANUAL, league_external_id=league_external_id, season=season)
 
@@ -192,6 +194,7 @@ class SyncService:
                 season or self.settings.default_season,
                 full=False,
             ),
+            reserve=self.settings.quota_reserve,
         )
 
     def _external_league(self, league_id: int | None) -> int | None:
@@ -229,6 +232,29 @@ class SyncService:
             return "Sezondaki tüm maçlar sonuçlandı; API isteği atılmadı"
         return None
 
+    def _manual_scope(self, league_id: int | None, season: int | None) -> tuple[int, int]:
+        """Elle güncellenecek lig ve sezon. Sezon verilmezse ekranlardaki gibi seçilir: güncel
+        sezon, yoksa en yeni. Veritabanı boşsa yalnızca varsayılan lig/sezonun ilk yüklemesine izin
+        verilir."""
+        if league_id is None:
+            league = self.repos.leagues.get_by_external_id(self.settings.default_league_id)
+        else:
+            league = self.repos.leagues.get(league_id)
+            if league is None:
+                raise NotFoundError(f"Lig bulunamadı: {league_id}")
+        loaded = self.repos.seasons.list_with_fixtures(league.id) if league else []
+        if league is None or not loaded:
+            if league_id is None and season is None:
+                return self.settings.default_league_id, self.settings.default_season
+            raise NotFoundError("Bu ligin yüklü sezonu yok; ilk yükleme komut satırından yapılır")
+        if season is None:
+            return league.external_id, next((s for s in loaded if s.is_current), loaded[0]).year
+        if not any(s.year == season for s in loaded):
+            raise NotFoundError(
+                f"Sezon yüklü değil: {season}. Yeni sezonlar yalnızca komut satırından yüklenir"
+            )
+        return league.external_id, season
+
     def _check_cooldown(self, league_external_id: int, season: int) -> None:
         cooldown = self.settings.manual_sync_cooldown_minutes * 60
         elapsed = self.sync_runs.seconds_since_last_run(league_external_id, season)
@@ -238,11 +264,17 @@ class SyncService:
                 f"Bu lig ve sezon az önce güncellendi; {minutes} dakika sonra tekrar deneyin"
             )
 
-    def _check_budget(self, needed: int) -> None:
+    def _check_budget(self, needed: int, trigger: SyncTrigger) -> None:
         remaining = self.api_usage.remaining_budget(self.settings.api_football_daily_limit)
         if remaining < needed:
             raise QuotaExceededError(
                 f"Günlük API bütçesi yetersiz: {needed} istek gerekiyor, {remaining} kaldı"
+            )
+        reserve = self.settings.quota_reserve
+        if trigger is SyncTrigger.MANUAL and remaining - needed < reserve:
+            raise QuotaExceededError(
+                f"Günün son {reserve} isteği otomatik güncellemeye ayrıldı; "
+                "elle güncelleme yarın tekrar açılır"
             )
 
     def _record_usage(self, pipeline: SyncPipeline) -> None:

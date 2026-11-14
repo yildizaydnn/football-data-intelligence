@@ -58,6 +58,6 @@ def get_fixture(fixture_id: int, service: FixtureServiceDep) -> FixtureDetailOut
 def get_fixture_statistics(fixture_id: int, service: StatisticsServiceDep) -> FixtureStatisticsOut:
     """Maç istatistikleri. İlk istekte sağlayıcıdan çekilip saklanır (1 API isteği), sonra DB'den.
 
-    Kotanın son `STATISTICS_QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).
+    Kotanın son `QUOTA_RESERVE` isteği otomatik güncellemelere ayrılmıştır (429).
     """
     return FixtureStatisticsOut.from_statistics(service.get(fixture_id))

@@ -19,7 +19,7 @@ SETTINGS = Settings(
     default_league_id=203,
     default_season=2024,
     api_football_daily_limit=100,
-    statistics_quota_reserve=10,
+    quota_reserve=10,
 )
 
 

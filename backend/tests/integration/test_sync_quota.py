@@ -132,3 +132,18 @@ class TestUnnecessaryRequests:
         run = service.run(SyncTrigger.MANUAL)
         assert run.status.value in ("success", "partial")  # örnek veride 1 bozuk kayıt var
         assert run.requests_made == 1
+
+
+def test_manual_sync_leaves_reserve_for_scheduled_sync(db_session: Session) -> None:
+    provider = FakeProvider()
+    service = SyncService(db_session, _settings(100), provider)
+    service.run(SyncTrigger.INITIAL)
+    ApiUsageRepository(db_session).record(100 - 3 - 10, daily_limit=100)  # 10 hak kaldı
+    provider.calls.clear()
+
+    with pytest.raises(QuotaExceededError, match="otomatik güncellemeye ayrıldı"):
+        service.run(SyncTrigger.MANUAL)
+    assert provider.calls == []
+    assert service.get_usage().can_sync is False
+
+    assert service.run(SyncTrigger.SCHEDULED).requests_made == 1  # rezerv kullanılabilir

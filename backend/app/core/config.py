@@ -39,8 +39,9 @@ class Settings(BaseSettings):
     # Arayüzden elle güncelleme: aynı lig/sezon için iki güncelleme arasındaki en kısa süre.
     manual_sync_cooldown_minutes: int = 10
     sync_stale_after_minutes: int = 30  # bu süreden uzun RUNNING kalan sync çökmüş sayılır
-    # Maç istatistikleri isteğe bağlı çekilir; günlük kotanın son N isteği sync'e ayrılır.
-    statistics_quota_reserve: int = 10
+    # Günlük kotanın son N isteği otomatik güncellemeye ayrılır; elle güncelleme ve maç
+    # istatistikleri bu kısma dokunamaz.
+    quota_reserve: int = 10
     # Maç istatistikleri herkese açık bir uçtan istenir; günde en fazla bu kadar maç için çekilir.
     statistics_daily_limit: int = 30
 

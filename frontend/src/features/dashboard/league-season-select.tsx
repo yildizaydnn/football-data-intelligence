@@ -6,7 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { SelectField } from "@/shared/components/select-field";
 import { formatSeason } from "@/shared/lib/format";
 
-import { seasonsQuery, useDashboardParams, useLeagues, useSeasons } from "./hooks";
+import {
+  seasonsQuery,
+  useDashboardParams,
+  useDisplayedSeason,
+  useLeagues,
+  useSeasons,
+} from "./hooks";
 
 export function LeagueSeasonSelect() {
   const router = useRouter();
@@ -15,8 +21,7 @@ export function LeagueSeasonSelect() {
   const { leagueId, season, href } = useDashboardParams();
   const leagues = useLeagues();
   const seasons = useSeasons(leagueId);
-  // URL'de sezon yoksa backend varsayılanı (verisi olan en güncel sezon) = listenin başı.
-  const currentSeason = season ?? seasons[0]?.year;
+  const currentSeason = useDisplayedSeason(leagueId, season);
 
   // Lig değişince aynı sekmede ve (yeni ligde verisi varsa) aynı sezonda kalınır.
   // Takım id'leri ligler arası anlamsız: takım analizinde yeni ligin liderine gidilir.

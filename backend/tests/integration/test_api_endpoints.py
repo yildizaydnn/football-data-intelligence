@@ -371,6 +371,29 @@ class TestMultiLeagueAndRules:
         assert loaded["next_sync_cost"] == 1
         assert new_season["next_sync_cost"] == 3  # sezon yok: referans veri de çekilir
 
+    def test_manual_sync_rejects_unloaded_season(
+        self, client: TestClient, provider: FakeProvider, league_id: int
+    ) -> None:
+        provider.calls.clear()
+
+        response = client.post("/api/v1/sync", json={"league_id": league_id, "season": 2021})
+
+        assert response.status_code == 404
+        assert "Sezon yüklü değil" in response.json()["error"]["message"]
+        assert provider.calls == []  # kota harcanmadı
+
+    def test_manual_sync_without_season_uses_displayed_season(
+        self, client: TestClient, db_session: Session, league_id: int
+    ) -> None:
+        from app.models import Fixture, Season
+
+        old_season = db_session.query(Season).filter_by(year=2023).one()
+        db_session.query(Fixture).update({Fixture.season_id: old_season.id})  # yalnızca 2023 yüklü
+
+        run = client.post("/api/v1/sync", json={"league_id": league_id}).json()
+
+        assert run["season"] == 2023  # varsayılan 2024 değil, ekranda görünen sezon
+
     def test_unknown_league_in_sync_request_is_404(self, client: TestClient) -> None:
         assert client.post("/api/v1/sync", json={"league_id": 9999}).status_code == 404
 

@@ -54,7 +54,7 @@ Hepsi [.env.example](../.env.example) içinde açıklamalarıyla yer alır. Öne
 | `SCHEDULER_ENABLED`, `SYNC_CRON` | Otomatik güncelleme açık mı, ne zaman (UTC cron) |
 | `SYNC_API_TOKEN` | `POST /sync/scheduled` bu değeri `X-Sync-Token` başlığında ister; boşsa o uç kapalıdır |
 | `MANUAL_SYNC_COOLDOWN_MINUTES` | Elle güncellemede aynı lig/sezon için bekleme süresi (10) |
-| `STATISTICS_QUOTA_RESERVE` | Maç istatistikleri, kotanın son N isteğine dokunamaz |
+| `QUOTA_RESERVE` | Kotanın son N isteği otomatik güncellemeye ayrılır; elle güncelleme ve maç istatistikleri dokunamaz |
 | `STATISTICS_DAILY_LIMIT` | Günde en fazla kaç maçın istatistiği çekilir (30) |
 | `GEMINI_API_KEY`, `OPENROUTER_API_KEY` | AI karşılaştırma; ikisi de boşsa özellik kapalı görünür |
 | `AI_DAILY_LIMIT` | Günlük en fazla yeni AI analizi |
@@ -76,8 +76,8 @@ Hepsi [.env.example](../.env.example) içinde açıklamalarıyla yer alır. Öne
 | Durum | Davranış |
 |---|---|
 | Günlük kota yetmez | Her güncellemeden önce kaç istek gerektiği hesaplanır (`next_sync_cost`), kota yetmiyorsa istek atılmadan reddedilir (429). Kalan kota, kendi sayacımız ile API'nin `x-ratelimit-requests-remaining` başlığından küçük olanıdır |
-| Kota rezervi | Maç istatistikleri kotanın son 10 isteğine dokunamaz; otomatik güncelleme her zaman çalışabilir |
-| Elle güncelleme tekrarları | Arayüzdeki şifresiz uç aynı lig/sezon için 10 dakikada bir çalışır (429 `too_many_requests`); tam yükleme (`full`) yalnızca CLI'dan yapılabilir |
+| Kota rezervi | Elle güncelleme ve maç istatistikleri kotanın son 10 isteğine dokunamaz; beş ligin otomatik güncellemesi (en fazla 5 istek) her zaman çalışabilir |
+| Elle güncelleme tekrarları | Arayüzdeki şifresiz uç yalnızca verisi yüklü sezonları kabul eder (yoksa 404) ve aynı lig/sezon için 10 dakikada bir çalışır (429 `too_many_requests`); yeni sezon ve tam yükleme (`full`) yalnızca CLI'dan yapılabilir |
 | Maç istatistikleri | Günde en fazla 30 maç; aynı maç için eşzamanlı iki istek gelirse maç satırı kilitlenir (`SELECT … FOR UPDATE`), ikinci istek ilkinin sonucunu kullanır |
 | Dakikalık sınır (önlem) | İstekler süreç genelinde ortak bir kayan pencereyle aralıklandırılır: son 60 sn'de `API_FOOTBALL_REQUESTS_PER_MINUTE` (10) istek atıldıysa en eskisinin pencereden çıkması beklenir. Yeniden denemeler de bu sayıma dahildir |
 | Dakikalık sınır yine aşılırsa (HTTP 429 veya yanıt içinde `rateLimit`) | Pencerenin sıfırlanması için 60 sn (veya API'nin `Retry-After` değeri kadar, en fazla 60 sn) beklenip yeniden denenir |

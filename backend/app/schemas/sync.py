@@ -57,4 +57,5 @@ class SyncUsageOut(Schema):
     remaining: int
     provider_remaining: int | None
     next_sync_cost: int
+    reserve: int
     can_sync: bool

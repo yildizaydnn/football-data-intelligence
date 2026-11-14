@@ -7,13 +7,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { FootballIcon } from "@/shared/components/football-icon";
 import { cn } from "@/lib/utils";
 
-import { useDashboardParams } from "@/features/dashboard/hooks";
+import { useDashboardParams, useDisplayedSeason } from "@/features/dashboard/hooks";
 
 import { useSyncStatus, useSyncUsage, useTriggerSync } from "./hooks";
 
 /** Kalan API kotası + "Şimdi güncelle". Bütçe yetmiyorsa buton pasif. */
 export function SyncControl() {
-  const { leagueId, season } = useDashboardParams();
+  const { leagueId, season: seasonParam } = useDashboardParams();
+  const season = useDisplayedSeason(leagueId, seasonParam);
   const usage = useSyncUsage(leagueId, season);
   const status = useSyncStatus();
   const sync = useTriggerSync(leagueId, season);
@@ -24,7 +25,9 @@ export function SyncControl() {
   const reason = running
     ? "Şu anda bir güncelleme çalışıyor"
     : !usage.can_sync
-      ? `Günlük kota yetersiz: ${usage.next_sync_cost} istek gerekiyor, ${usage.remaining} kaldı`
+      ? usage.remaining >= usage.next_sync_cost
+        ? `Günün son ${usage.reserve} isteği otomatik güncellemeye ayrıldı`
+        : `Günlük kota yetersiz: ${usage.next_sync_cost} istek gerekiyor, ${usage.remaining} kaldı`
       : `Bu güncelleme ${usage.next_sync_cost} API isteği kullanır`;
 
   return (
