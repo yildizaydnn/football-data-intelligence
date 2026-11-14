@@ -23,10 +23,12 @@ class FixtureTransformer(BaseTransformer[FixtureDTO, dict[str, Any]]):
         season_id: int,
         team_ids: Mapping[int, int],
         status_map: Mapping[str, MatchStatus],
+        awarded: Mapping[int, tuple[int, int]] | None = None,
     ) -> None:
         self.season_id = season_id
         self.team_ids = team_ids
         self.status_map = status_map
+        self.awarded = awarded or {}
 
     def transform(self, item: FixtureDTO) -> dict[str, Any]:
         external_id = require(item.fixture.id, "fixture.id")
@@ -42,6 +44,9 @@ class FixtureTransformer(BaseTransformer[FixtureDTO, dict[str, Any]]):
             raise TransformError("ev sahibi ve deplasman aynı takım")
 
         home_goals, away_goals = self._goals(item, status)
+        if external_id in self.awarded:  # hükmen sonuç: resmi skor sahadakinin yerine geçer
+            status, status_raw = MatchStatus.FINISHED, "AWD"
+            home_goals, away_goals = self.awarded[external_id]
 
         return {
             "external_id": external_id,

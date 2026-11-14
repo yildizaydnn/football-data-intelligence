@@ -86,6 +86,21 @@ def test_postponed_match_drops_score_even_if_api_sends_one(
     assert row["home_goals"] is None
 
 
+@pytest.mark.parametrize(
+    ("patch", "case"),
+    [({}, "sahadaki skor"), ({"fixture__status__short": "CANC"}, "API maçı iptal saydı")],
+)
+def test_awarded_result_overrides_provider_score(
+    raw_fixtures: list, patch: dict[str, Any], case: str
+) -> None:
+    transformer = FixtureTransformer(SEASON_ID, TEAM_IDS, status_map(), awarded={1001: (3, 0)})
+
+    row = transformer.transform(_dto(raw_fixtures, 1001, **patch))
+
+    assert (row["status"], row["status_raw"]) == (MatchStatus.FINISHED, "AWD"), case
+    assert (row["home_goals"], row["away_goals"]) == (3, 0), case
+
+
 def test_kickoff_is_normalized_to_utc(transformer: FixtureTransformer, raw_fixtures: list):
     row = transformer.transform(_dto(raw_fixtures, 1001, fixture__date="2024-09-21T19:00:00+03:00"))
 

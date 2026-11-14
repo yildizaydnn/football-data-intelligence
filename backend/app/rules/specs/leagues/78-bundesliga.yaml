@@ -8,6 +8,7 @@ meta:
   notes: >
     Değerler genel bilgiyle yazıldı, resmi yönetmelikle karşılaştırılmalı.
     16. sıradaki takım 2. Bundesliga'nın 3.'süyle küme düşme play-off'u oynar.
+    2022/23–2024/25 final tabloları Wikipedia ile karşılaştırıldı (14.11.2026).
 
 standings:
   tiebreakers: [points, goal_difference, goals_for, h2h_points, h2h_away_goals_for, away_goals_for]
@@ -18,3 +19,9 @@ zones:
   - { from: 1, to: 4, kind: champions_league, label: Şampiyonlar Ligi }
   - { from: -3, to: -3, kind: relegation_playoff, label: Küme düşme play-off }
   - { from: -2, to: -1, kind: relegation, label: Küme düşme }
+
+seasons:
+  2024:
+    cleaning:
+      awarded:
+        1224099: [0, 2] # Union Berlin - Bochum: Bochum kalecisine çakmak atıldı, DFB hükmen verdi

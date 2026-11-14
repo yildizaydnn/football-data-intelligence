@@ -9,6 +9,9 @@ meta:
     Değerler genel bilgiyle yazıldı, resmi talimatla karşılaştırılmalı.
     Avrupa kontenjanları kupa şampiyonlarına ve ülke katsayısına göre sezondan sezona
     değiştiği için yalnızca Şampiyonlar Ligi ve küme düşme bölgeleri tanımlı.
+    2022/23–2024/25 final tabloları Wikipedia ile karşılaştırıldı (14.11.2026).
+    Farklar RSSSF ve basınla doğrulandı. 2024/25'te 45 puanda eşit üç takımın sırası RSSSF ile
+    aynı (aralarındaki maçlar); Wikipedia bu sıralamada farklı.
 
 standings:
   # Eşitlikte önce kendi aralarındaki maçlar (tüm karşılıklı maçlar oynandıysa).
@@ -18,14 +21,31 @@ zones:
   - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
 
 seasons:
+  2022:
+    standings:
+      deductions:
+        1001: 3 # Kayserispor (kulüp lisans kriterleri)
+    cleaning:
+      awarded:
+        884568: [0, 3] # Gaziantep - Trabzonspor: Gaziantep depremden sonra ligden çekildi
   2023:
+    standings:
+      deductions:
+        1001: 3 # Kayserispor (kulüp lisans kriterleri)
+        3578: 3 # İstanbulspor (Trabzonspor maçında sahadan çekilme)
+    cleaning:
+      awarded:
+        1074761: [0, 3] # İstanbulspor - Trabzonspor: İstanbulspor sahadan çekildi
     zones:
       - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
       - { from: -4, to: -1, kind: relegation, label: Küme düşme }
   2024:
     standings:
       deductions:
-        3563: 12 # Adana Demirspor (FIFA transfer yasağı cezaları)
+        3563: 12 # Adana Demirspor (3 lisans + 3 sahadan çekilme + 6 FIFA kararı)
+    cleaning:
+      awarded:
+        1238054: [3, 0] # Galatasaray - Adana Demirspor: Adana Demirspor sahadan çekildi
     zones:
       - { from: 1, to: 2, kind: champions_league, label: Şampiyonlar Ligi (eleme turları dahil) }
       - { from: -4, to: -1, kind: relegation, label: Küme düşme }

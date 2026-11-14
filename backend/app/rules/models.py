@@ -7,7 +7,14 @@ import re
 from collections.abc import Mapping
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    NonNegativeInt,
+    field_validator,
+    model_validator,
+)
 
 from app.analytics.common import PointsTable
 from app.analytics.standings import StandingsRules
@@ -71,6 +78,9 @@ class StatisticSpec(_Spec):
 
 class CleaningSpec(_Spec):
     status_map: dict[str, MatchStatus]  # sağlayıcı kodu ("FT") → durum
+    # Hükmen sonuçlanan maçlar: maçın API id'si → resmi skor [ev, deplasman]. API bu maçlarda
+    # sahadaki skoru veya "iptal" döndürebiliyor; resmi tabloyla aynı sonuç için skor ezilir.
+    awarded: dict[int, tuple[NonNegativeInt, NonNegativeInt]] = {}
     # Sağlayıcı istatistik adı → anahtar. Sıra arayüzdeki gösterim sırasıdır;
     # listede olmayan istatistikler saklanmaz.
     statistics: dict[str, StatisticSpec]

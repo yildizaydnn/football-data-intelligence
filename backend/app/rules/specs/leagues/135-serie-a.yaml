@@ -9,6 +9,8 @@ meta:
     Değerler genel bilgiyle yazıldı, resmi yönetmelikle karşılaştırılmalı.
     Şampiyonluk veya küme düşmede puan eşitliği play-off maçıyla çözülebilir; o maç
     normal sezon haftası olmadığı için tabloya girmez (include_rounds).
+    2022/23–2024/25 final tabloları Wikipedia ile karşılaştırıldı (14.11.2026).
+    2022/23: Verona play-off'u kazanıp 17. oldu; play-off tabloya girmediği için bizde 18.
 
 standings:
   tiebreakers: [points, h2h_points, h2h_goal_difference, goal_difference, goals_for]

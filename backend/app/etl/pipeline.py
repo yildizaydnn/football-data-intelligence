@@ -155,7 +155,7 @@ class SyncPipeline:
             team_ids = self.repos.teams.id_map(team_external_ids)
             logger.info("Maç verisinden %d takım eklendi", len(teams.items))
         cleaning = self.rules.resolve(league_external_id, season_year).cleaning
-        transformer = FixtureTransformer(season.id, team_ids, cleaning.status_map)
+        transformer = FixtureTransformer(season.id, team_ids, cleaning.status_map, cleaning.awarded)
         fixtures = transformer.transform_many(response.data)
         result.skipped += fixtures.skipped
         result.upsert += self.repos.fixtures.upsert_with_changes(fixtures.items, sync_run_id)
