@@ -9,6 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, time
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.analytics.common import in_rounds
@@ -139,7 +140,15 @@ class InsightService:
         insight.unverified_numbers = unverified
         insight.generated_at = datetime.now(UTC)
         self.session.add(insight)
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError:
+            # Aynı ikili için eşzamanlı başka bir istek önce kaydetti.
+            self.session.rollback()
+            existing = self.insights.get_for_pair(season.id, team_a.id, team_b.id)
+            if existing is None:
+                raise
+            return existing
         return insight
 
     @staticmethod

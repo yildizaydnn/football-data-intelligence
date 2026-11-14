@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import pytest
 from sqlalchemy.orm import Session
 
@@ -117,3 +119,36 @@ def test_invalid_team_pairs(db_session: Session, ids: dict[str, int]) -> None:
     with pytest.raises(BadRequestError, match="sezonda"):
         service.compare(ids["league"], ids["gs"], 999_999)
     assert FixtureRepository(db_session).count() > 0
+
+
+def test_returns_stored_insight_when_concurrent_request_saved_first(
+    db_session: Session, ids: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.models import TeamInsight
+
+    season = SeasonRepository(db_session).get_by_year(ids["league"], 2024)
+    team_a, team_b = sorted((ids["gs"], ids["fb"]))
+    db_session.add(
+        TeamInsight(
+            season_id=season.id,
+            team_a_id=team_a,
+            team_b_id=team_b,
+            facts_hash="other",
+            facts={},
+            content="Diğer isteğin metni",
+            model="other-model",
+            unverified_numbers=[],
+            generated_at=datetime.now(UTC),
+        )
+    )
+    db_session.commit()  # diğer istek kaydını tamamladı
+    service = _service(db_session, FakeGenerator())
+    original = service.insights.get_for_pair
+    reads = iter([lambda *_: None])  # ilk okumada kayıt yok: diğer istek henüz kaydetmemiş gibi
+    monkeypatch.setattr(
+        service.insights, "get_for_pair", lambda *args: next(reads, original)(*args)
+    )
+
+    result = service.compare(ids["league"], ids["gs"], ids["fb"])
+
+    assert (result.content, result.model) == ("Diğer isteğin metni", "other-model")
