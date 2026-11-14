@@ -4,7 +4,7 @@ Beş büyük futbol liginin (Süper Lig, Premier League, La Liga, Bundesliga, Se
 ve 2024/25 sezonlarını API-Football'dan alıp kendi veritabanında saklayan, puan tablosunu ve takım
 istatistiklerini **kendisi hesaplayan** ve bunları bir web panelinde gösteren uygulama.
 
-**Canlı demo:** _yayına alındığında eklenecek_
+**Canlı demo:** https://football-intelligence-opal.vercel.app
 
 ## Kısaca
 
