@@ -122,7 +122,7 @@ Neden böyle:
 - İstenen teknolojiler aynen kullanıldı: Next.js, React, TypeScript, FastAPI, PostgreSQL,
   Tailwind CSS, shadcn/ui. Eklenen yardımcı araçlar ve nedenleri:
   [teknik ayrıntılar](docs/technical-details.md#teknoloji-seçimleri).
-- **Otomatik testler:** 258 test. Puan tablosunun doğru sıralanması (eşitlik durumları dahil),
+- **Otomatik testler:** 264 test. Puan tablosunun doğru sıralanması (eşitlik durumları dahil),
   takım istatistikleri, aynı maçın iki kez kaydedilmemesi, istek sınırı ve hata durumları,
   bütün endpoint'ler (pytest; birim ve gerçek PostgreSQL ile entegrasyon testleri). Kodda her
   değişiklikte GitHub Actions üzerinde otomatik çalışırlar (CI).
@@ -171,8 +171,9 @@ Bütün komutlar: `make help`.
 
 ## Bilinen sınırlamalar
 
-- **Lig kuralları resmi yönetmeliklerle madde madde karşılaştırılmadı.** Puan silme cezaları ve
-  sıralamalar gerçek sonuçlarla kontrol edildi, ama ayar dosyalarında "doğrulanmadı" notu duruyor.
+- **Lig kuralları resmi yönetmeliklerle madde madde karşılaştırılmadı.** Hesaplanan 15 final
+  tablosu Wikipedia ile karşılaştırıldı (13'ü birebir aynı, 2 fark açıklamalı), ama ayar
+  dosyalarında `verified: false` notu duruyor.
 - **Güncel sezon yok.** Ücretsiz paket 2024/25'ten yeni sezonları vermiyor. Bu sezonlar bittiği
   için otomatik güncelleme her sabah "gerek görülmedi" diye kayıt düşer. Sistem devam eden bir
   sezon için tasarlandı ve testlerle doğrulandı.

@@ -165,6 +165,9 @@ başlatmaz. Spec'lerin tanımladıkları:
 - **Veri temizleme:** API durum kodlarının eşlenmesi (`FT`, `AET`, `PEN` → bitti; `PST` →
   ertelendi...), puan tablosuna sayılacak turlar (ör. Bundesliga küme play-off maçları hariç),
   maç istatistiklerinin isim eşlemesi
+- **Hükmen sonuçlar:** API'nin sahadaki skoru veya iptal olarak verdiği ama federasyonun hükmen
+  sonuçlandırdığı maçlar (ör. Süper Lig 2024/25 Galatasaray–Adana Demirspor 3-0). Resmi skor
+  sahadakinin yerine geçer, maç `AWD` olarak işaretlenir ve değişiklik geçmişe yazılır
 
 Yeni bir lig eklemek için kod yazmak gerekmez: `leagues/<id>.yaml` eklenir, gerekirse
 `TRACKED_LEAGUES`'a yazılır. Arayüzdeki tablo bölgeleri ve açıklamaları da `GET /leagues/{id}/rules`
@@ -182,8 +185,11 @@ Yeni bir lig eklemek için kod yazmak gerekmez: `leagues/<id>.yaml` eklenir, ger
   takımı eksik kayıt atlanır ve raporlanır. Oynanmamış maçların skoru `NULL` tutulur ve hesaplara
   katılmaz. Bilinmeyen bir durum kodu tahminle sınıflandırılmaz; kayıt atlanır ve raporlanır.
   API'nin orijinal durum kodu her maçta ayrıca saklanır (`status_raw`).
-- **Doğrulama:** hesaplanan tablolar gerçek sonuçlarla karşılaştırıldı: şampiyonlar, puanlar,
-  Premier League ve Serie A puan silme cezaları, Bundesliga play-off sıraları.
+- **Doğrulama:** beş ligin üç sezonluk 15 final tablosu takım takım (sıra, puan, averaj)
+  Wikipedia ile karşılaştırıldı; 13'ü birebir aynı. İki fark bilinçli: Süper Lig 2024/25'te 45
+  puanda eşit üç takımın sırası aralarındaki maçlara göre RSSSF ile aynı, Wikipedia'dan farklı;
+  Serie A 2022/23'te 17.–18. sıra ayrı bir play-off maçıyla belirlendi ve bu maç lig tablosuna
+  sayılmaz (ayar dosyasında not olarak duruyor).
 
 ## Maç istatistikleri (Bonus B)
 
@@ -248,7 +254,7 @@ Takım analizi sayfasında iki takım seçilir; kısa, Türkçe, veriye dayalı 
 ## Testler ve CI
 
 ```bash
-make test     # backend: 258 test
+make test     # backend: 264 test
 make lint     # ruff + eslint + TypeScript
 ```
 
