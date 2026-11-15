@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamStatisticsDTO
+from app.providers.api_football.provider import parse_items
 from app.providers.base import ProviderResponse
 from tests.conftest import load_json
 
@@ -58,4 +59,6 @@ class FakeProvider:
             raise self.fail_on[name]
         if self.remaining is not None:
             self.remaining -= 1
-        return ProviderResponse([dto.model_validate(i) for i in data], self.remaining)
+        # Gerçek provider ile aynı ayrıştırma: bozuk kayıt ayrılır, gerisi döner.
+        items, rejected = parse_items(dto, data)
+        return ProviderResponse(items, self.remaining, rejected=rejected)

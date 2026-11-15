@@ -64,5 +64,6 @@ class OverviewService:
                 season.id, now or datetime.now(UTC), UPCOMING_MATCHES
             ),
             live=[f for f in all_fixtures if f.status is MatchStatus.LIVE],
-            last_sync=self.sync_runs.latest_data_update(league.external_id),
+            # Seçili sezonun son başarılı güncellemesi; yoksa None (başka sezonun saati değil).
+            last_sync=self.sync_runs.latest_data_update(league.external_id, season.year),
         )

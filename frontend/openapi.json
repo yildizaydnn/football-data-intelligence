@@ -958,7 +958,7 @@
           "sync"
         ],
         "summary": "Get Sync Status",
-        "description": "Çalışan sync ve son işlemler; `league_id` verilirse geçmiş o lige göre süzülür.",
+        "description": "Çalışan sync ve son işlemler; `league_id`/`season` verilirse geçmiş onlara göre süzülür.",
         "operationId": "get_sync_status",
         "parameters": [
           {
@@ -976,6 +976,26 @@
               ],
               "title": "League Id"
             }
+          },
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sezon yılı; boşsa bütün sezonlar",
+              "title": "Season"
+            },
+            "description": "Sezon yılı; boşsa bütün sezonlar"
           }
         ],
         "responses": {

@@ -42,7 +42,7 @@ Case dokümanının bölüm sırasıyla.
 | İstekler sunucudan atılmalı                                                  | Tarayıcı veri kaynağıyla hiç konuşmaz; yalnızca bizim sunucumuzla (backend API) konuşur                                                       |
 | API anahtarı güvende olmalı                                                  | Anahtar yalnızca sunucudaki gizli ayar dosyasında (`.env`, ortam değişkeni). Kodda, GitHub'da ve tarayıcıda yok                               |
 | Veri çekme tekrar çalıştırılabilmeli                                         | Güncelleme istendiği kadar tekrarlanabilir; aynı veri ikinci kez gelince kopya oluşmaz (idempotent sync)                                      |
-| Eksik veri ve hatalar ele alınmalı                                           | Bilgisi eksik tek bir maç bütün güncellemeyi bozmaz: o maç atlanır ve not edilir, gerisi kaydedilir (güncelleme `partial` olarak işaretlenir) |
+| Eksik veri ve hatalar ele alınmalı                                           | Bilgisi eksik ya da biçimi bozuk (ör. `goals: null`) tek bir maç bütün güncellemeyi bozmaz: o maç atlanır, gerisi kaydedilir. Güncelleme `partial` olarak işaretlenir; atlanan maçın numarası ve nedeni güncelleme kaydında ve logda görünür. Daha önce kaydedilmiş hali silinmez |
 
 ### 3. Veritabanı
 
@@ -72,6 +72,11 @@ son 5 maç için ayrı ayrı gösterilir.
 | Maçlar        | Tarihe göre maç listesi; takıma, tarihe ve maç durumuna göre filtre; skorlar; maç detayı                                                   |
 | Puan tablosu  | Sıralama, oynanan / galibiyet / beraberlik / mağlubiyet, averaj, puan, son 5 maç; Avrupa kupası ve küme düşme bölgeleri                    |
 | Takım analizi | Son 5 maç, galibiyet oranı, attığı ve yediği gol ortalamaları, iç saha / deplasman karşılaştırması, 2 grafik, yapay zekâ ile karşılaştırma |
+
+**Son güncelleme zamanı sezona özeldir:** yalnızca seçili lig ve sezonun son başarılı (veya kısmi)
+güncellemesi gösterilir; başka bir sezonun güncellemesi bu bilgiyi değiştirmez. O sezon için
+başarılı güncelleme yoksa API `last_sync: null` döner ve ekranda "Bu sezon için henüz başarılı
+güncelleme yok" yazar. Başarısız veya atlanan denemeler veri değiştirmediği için sayılmaz.
 
 Telefon ve bilgisayarda düzgün görünür (responsive). Bütün ekranlar gerçek veriyle, backend API'den
 çalışır; örnek veri yoktur.
@@ -112,7 +117,7 @@ Neden böyle:
 
 | Bonus                                | Durum                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **A – Canlı skor**                   | **Yapılmadı, planı hazır.** Ücretsiz paket yalnızca bitmiş sezonları veriyor; canlı maç olmadan çalıştığını gösteremezdik. Plan: yalnızca maç saatlerinde, bütün liglerin canlı maçlarını tek istekte (`/fixtures?live=...`) 5–10 dakikada bir sormak (polling). Maç olmayan saatlerde istek atılmaz. Yoğun bir maç günü yaklaşık 36 istek tutar. Sistem buna hazır: "canlı" durumu tanınıyor, skor değişiklikleri zaten geçmişe yazılıyor |
+| **A – Canlı skor**                   | **Yapılmadı, planı hazır.** Ücretsiz paket yalnızca bitmiş sezonları veriyor; canlı maç olmadan çalıştığını gösteremezdik. Plan: yalnızca maç saatlerinde, bütün liglerin canlı maçlarını tek istekte (`/fixtures?live=...`) 5–10 dakikada bir sormak (polling). Maç olmayan saatlerde istek atılmaz. Yoğun bir maç günü yaklaşık 36 istek tutar. Sistem buna hazır: "canlı" durumu tanınıyor, skor değişiklikleri zaten geçmişe yazılıyor. Canlı akışa geçişin riskleri ve 7.500 isteklik plan: [docs/live-data-risks.md](docs/live-data-risks.md) |
 | **B – Maç istatistikleri**           | **Yapıldı.** Şut, topa sahip olma, korner, pas isabeti, gol beklentisi (xG) gibi 17 istatistik. Maç detayı ilk açıldığında alınır ve saklanır (lazy fetch, maç başına bir kez). Veri kaynağı o maç için istatistik vermiyorsa "istatistik yok" yazar                                                                                                                                                                                       |
 | **C – Yapay zekâ ile karşılaştırma** | **Yapıldı.** İki takım seçilir, kısa bir yorum yazılır. Yapay zekâ hesap yapmaz: bütün sayılar bizim tarafımızda hesaplanıp ona verilir, o yalnızca yorumlar. Yazdığı metindeki her sayı verilerle karşılaştırılır; uymayan sayı varsa ekranda uyarı çıkar (grounding kontrolü). Aynı karşılaştırma veriler değişmedikçe tekrar üretilmez (cache). Ana LLM servisi (Gemini) yoğunsa yedek servis (OpenRouter) devreye girer (fallback)     |
 | **D – Docker**                       | **Yapıldı.** Veritabanı, backend ve frontend tek komutla ayağa kalkar (`docker compose up`). Backend açılırken veritabanı tablolarını kendisi günceller (migration); veriler container silinse de kalıcı bir alanda (volume) durur |
@@ -122,7 +127,7 @@ Neden böyle:
 - İstenen teknolojiler aynen kullanıldı: Next.js, React, TypeScript, FastAPI, PostgreSQL,
   Tailwind CSS, shadcn/ui. Eklenen yardımcı araçlar ve nedenleri:
   [teknik ayrıntılar](docs/technical-details.md#teknoloji-seçimleri).
-- **Otomatik testler:** 264 test. Puan tablosunun doğru sıralanması (eşitlik durumları dahil),
+- **Otomatik testler:** 270 test. Puan tablosunun doğru sıralanması (eşitlik durumları dahil),
   takım istatistikleri, aynı maçın iki kez kaydedilmemesi, istek sınırı ve hata durumları,
   bütün endpoint'ler (pytest; birim ve gerçek PostgreSQL ile entegrasyon testleri). Kodda her
   değişiklikte GitHub Actions üzerinde otomatik çalışırlar (CI).

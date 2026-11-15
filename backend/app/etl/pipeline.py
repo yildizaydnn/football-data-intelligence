@@ -101,7 +101,7 @@ class SyncPipeline:
     def _load_reference(
         self, league_external_id: int, season_year: int, result: PipelineResult
     ) -> None:
-        league_resp = self._call(lambda: self.provider.get_league(league_external_id))
+        league_resp = self._call(lambda: self.provider.get_league(league_external_id), result)
         leagues = LeagueTransformer().transform_many(league_resp.data)
         result.skipped += leagues.skipped
         result.upsert += self.repos.leagues.upsert(leagues.items)
@@ -115,7 +115,9 @@ class SyncPipeline:
         result.skipped += seasons.skipped
         result.upsert += self.repos.seasons.upsert(seasons.items)
 
-        teams_resp = self._call(lambda: self.provider.get_teams(league_external_id, season_year))
+        teams_resp = self._call(
+            lambda: self.provider.get_teams(league_external_id, season_year), result
+        )
         teams = TeamTransformer().transform_many(teams_resp.data)
         result.skipped += teams.skipped
         result.upsert += self.repos.teams.upsert(teams.items)
@@ -137,7 +139,8 @@ class SyncPipeline:
         response = self._call(
             lambda: self.provider.get_fixtures(
                 league_external_id, season_year, date_from=date_from, date_to=date_to
-            )
+            ),
+            result,
         )
         team_external_ids = [
             team_id
@@ -160,7 +163,9 @@ class SyncPipeline:
         result.skipped += fixtures.skipped
         result.upsert += self.repos.fixtures.upsert_with_changes(fixtures.items, sync_run_id)
 
-    def _call[T](self, fetch: Callable[[], ProviderResponse[T]]) -> ProviderResponse[T]:
+    def _call[T](
+        self, fetch: Callable[[], ProviderResponse[T]], result: PipelineResult
+    ) -> ProviderResponse[T]:
         try:
             response = fetch()
         except (ProviderError, QuotaExceededError) as exc:
@@ -169,6 +174,10 @@ class SyncPipeline:
         self.requests_made += response.requests_made
         if response.requests_remaining is not None:
             self.requests_remaining = response.requests_remaining
+        # Biçimi bozuk olduğu için provider'da ayrılan kayıtlar da sync sonucunda "atlandı" sayılır.
+        result.skipped += [
+            SkippedRecord(r.record, r.index, r.reason, r.external_id) for r in response.rejected
+        ]
         return response
 
 

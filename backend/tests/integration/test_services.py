@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
-from app.core.enums import MatchResult, MatchStatus, SyncTrigger
+from app.core.enums import MatchResult, MatchStatus, SyncStatus, SyncTrigger
 from app.core.exceptions import NotFoundError
 from app.models import League
 from app.repositories.fixture_repository import FixtureRepository
@@ -194,3 +194,41 @@ class TestOverviewService:
         assert [f.external_id for f in overview.recent_results] == [1002, 1001]
         assert [f.external_id for f in overview.upcoming] == [1004]  # 1005 ertelendi
         assert overview.last_sync is not None
+
+    def test_last_sync_is_per_season(
+        self,
+        league: League,
+        db_session: Session,
+        leagues: LeagueService,
+        standings: StandingsService,
+    ) -> None:
+        # Regresyon: başka sezonun güncellemesi bu sezonun "son güncelleme"sini değiştirmemeli.
+        sync_runs = SyncRunRepository(db_session)
+        service = OverviewService(
+            FixtureRepository(db_session), sync_runs, leagues, standings, get_rule_engine()
+        )
+        season_2024_sync = service.get_overview(league.id, 2024).last_sync
+
+        other_season = sync_runs.try_start(SyncTrigger.MANUAL, 203, 2023)
+        sync_runs.finish(other_season, SyncStatus.SUCCESS)
+
+        assert season_2024_sync is not None and season_2024_sync.season == 2024
+        assert service.get_overview(league.id, 2024).last_sync == season_2024_sync
+        assert service.get_overview(league.id, 2023).last_sync == other_season
+
+    def test_last_sync_is_none_without_successful_sync_for_season(
+        self,
+        league: League,
+        db_session: Session,
+        leagues: LeagueService,
+        standings: StandingsService,
+    ) -> None:
+        # 2024 başarılı, 2023 için yalnızca başarısız deneme var: 2023'e 2024'ün saati düşmez.
+        sync_runs = SyncRunRepository(db_session)
+        failed = sync_runs.try_start(SyncTrigger.MANUAL, 203, 2023)
+        sync_runs.finish(failed, SyncStatus.FAILED, error_message="API erişilemedi")
+        service = OverviewService(
+            FixtureRepository(db_session), sync_runs, leagues, standings, get_rule_engine()
+        )
+
+        assert service.get_overview(league.id, 2023).last_sync is None

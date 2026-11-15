@@ -5,13 +5,16 @@ import { TriangleAlert } from "lucide-react";
 import { formatDateTime } from "@/shared/lib/format";
 
 import { useDashboardParams } from "@/features/dashboard/hooks";
+import { useOverview } from "@/features/overview/hooks";
 
 import { useSyncStatus } from "./hooks";
 
-/** Son senkronizasyon başarısızsa: kullanıcıya eski veri gösterildiğini söyler. */
+/** Seçili sezonun son senkronizasyonu başarısızsa: kullanıcıya eski veri gösterildiğini söyler. */
 export function SyncAlert() {
-  const { leagueId } = useDashboardParams();
-  const { recent } = useSyncStatus(leagueId);
+  const { leagueId, season } = useDashboardParams();
+  // URL'de sezon yoksa backend'in çözdüğü sezon (hero aynı sorguyu kullanır; ek istek atılmaz).
+  const { year } = useOverview(leagueId, season).season;
+  const { recent } = useSyncStatus(leagueId, year);
   const last = recent[0];
   if (!last || last.status !== "failed") return null;
 
@@ -26,7 +29,7 @@ export function SyncAlert() {
         <b className="font-semibold text-[#ffc877]">Son güncelleme başarısız oldu.</b>{" "}
         <span className="text-mist">
           {last.error_message ?? "Veri sağlayıcıya ulaşılamadı."} Veritabanındaki son veriler
-          gösteriliyor{lastGood ? ` (${formatDateTime(lastGood.started_at)})` : ""}.
+          gösteriliyor{lastGood ? ` (${formatDateTime(lastGood.finished_at ?? lastGood.started_at)})` : ""}.
         </span>
       </p>
     </div>

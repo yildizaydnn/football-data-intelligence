@@ -80,6 +80,21 @@ class TestProviderParsing:
         assert result.data[3].goals.home is None
         assert result.data[5].teams.home.id is None
 
+    def test_malformed_item_is_rejected_and_others_kept(
+        self, provider: ApiFootballProvider, api: respx.MockRouter
+    ) -> None:
+        # Biçimi bozuk tek kayıt (goals: null) bütün yanıtı düşürmemeli; nedeniyle ayrılmalı.
+        valid, broken = load_json("fixtures.json")["response"][:2]
+        broken["goals"] = None
+        api.get("/fixtures").respond(json={"response": [valid, broken]}, headers=QUOTA)
+
+        result = provider.get_fixtures(203, 2024)
+
+        assert [f.fixture.id for f in result.data] == [1001]
+        [rejected] = result.rejected
+        assert (rejected.record, rejected.index, rejected.external_id) == ("FixtureDTO", 1, 1002)
+        assert "goals" in rejected.reason
+
     def test_get_fixtures_with_date_range(
         self, provider: ApiFootballProvider, api: respx.MockRouter
     ) -> None:

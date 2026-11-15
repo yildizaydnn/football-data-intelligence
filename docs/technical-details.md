@@ -83,7 +83,7 @@ Hepsi [.env.example](../.env.example) içinde açıklamalarıyla yer alır. Öne
 | Dakikalık sınır yine aşılırsa (HTTP 429 veya yanıt içinde `rateLimit`) | Pencerenin sıfırlanması için 60 sn (veya API'nin `Retry-After` değeri kadar, en fazla 60 sn) beklenip yeniden denenir |
 | 5xx, zaman aşımı, bağlantı hatası | Kısa üstel bekleme ile en fazla 3 deneme (tenacity) |
 | HTTP 200 + `errors` alanı | API-Football hataları çoğunlukla böyle döner; gövde ayrıştırılıp doğru hata türüne çevrilir |
-| Bozuk veya eksik kayıt | Tek kayıt yüzünden sync düşmez: kayıt atlanır, neden loglanır, güncelleme `partial` olarak işaretlenir |
+| Bozuk veya eksik kayıt | Tek kayıt yüzünden sync düşmez: yanıt kayıt kayıt doğrulanır, biçimi bozuk (ör. `goals: null`) veya eksik kayıt atlanır, neden loglanır ve `sync_runs.error_message`'a yazılır, güncelleme `partial` olarak işaretlenir |
 | Güncelleme yarıda kalır | Transaction geri alınır, mevcut veri bozulmaz; hata `sync_runs` tablosuna yazılır, harcanan istekler yine kotaya işlenir |
 | Aynı anda iki güncelleme | Veritabanı seviyesinde kilit (kısmi unique index) ikincisini 409 ile reddeder; takılı kalan kilit 30 dakika sonra otomatik açılır |
 
@@ -254,7 +254,7 @@ Takım analizi sayfasında iki takım seçilir; kısa, Türkçe, veriye dayalı 
 ## Testler ve CI
 
 ```bash
-make test     # backend: 264 test
+make test     # backend: 270 test
 make lint     # ruff + eslint + TypeScript
 ```
 
