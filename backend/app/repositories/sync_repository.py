@@ -69,14 +69,19 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         value = self.session.scalar(stmt)
         return float(value) if value is not None else None
 
-    def latest_data_update(self, league_external_id: int | None = None) -> SyncRun | None:
+    def latest_data_update(
+        self, league_external_id: int | None = None, season: int | None = None
+    ) -> SyncRun | None:
         """Veriyi gerçekten yazan son sync (başarılı/kısmi); atlanan/başarısız sayılmaz.
 
-        Lig verilirse yalnızca o ligin sync'leri dikkate alınır.
+        Lig ve sezon verilirse yalnızca o lig/sezonun sync'leri dikkate alınır; bir sezonun
+        güncellemesi diğer sezonun "son güncelleme" bilgisini değiştirmez.
         """
         filters = [SyncRun.status.in_((SyncStatus.SUCCESS, SyncStatus.PARTIAL))]
         if league_external_id is not None:
             filters.append(SyncRun.league_external_id == league_external_id)
+        if season is not None:
+            filters.append(SyncRun.season == season)
         stmt = (
             select(SyncRun)
             .where(*filters)
@@ -85,10 +90,14 @@ class SyncRunRepository(BaseRepository[SyncRun]):
         )
         return self.session.scalar(stmt)
 
-    def list_recent(self, limit: int = 10, league_external_id: int | None = None) -> list[SyncRun]:
-        filters = (
-            [] if league_external_id is None else [SyncRun.league_external_id == league_external_id]
-        )
+    def list_recent(
+        self, limit: int = 10, league_external_id: int | None = None, season: int | None = None
+    ) -> list[SyncRun]:
+        filters = []
+        if league_external_id is not None:
+            filters.append(SyncRun.league_external_id == league_external_id)
+        if season is not None:
+            filters.append(SyncRun.season == season)
         return self.list(
             *filters, order_by=[SyncRun.started_at.desc(), SyncRun.id.desc()], limit=limit
         )

@@ -105,8 +105,10 @@ export const endpoints = {
       }),
     ),
 
-  syncStatus: (leagueId?: number) =>
-    unwrap(api.GET("/api/v1/sync/status", { params: { query: { league_id: leagueId } } })),
+  syncStatus: (leagueId?: number, season?: number) =>
+    unwrap(
+      api.GET("/api/v1/sync/status", { params: { query: { league_id: leagueId, season } } }),
+    ),
 
   rules: ({ leagueId, season }: LeagueScope) =>
     unwrap(

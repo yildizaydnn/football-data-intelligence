@@ -56,7 +56,7 @@ export function KpiCards({ overview }: { overview: Overview }) {
         ) : (
           <>
             <span>—</span>
-            <Note>Henüz senkronizasyon yapılmadı</Note>
+            <Note>Bu sezon için henüz başarılı güncelleme yok</Note>
           </>
         )}
       </Kpi>

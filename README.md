@@ -73,6 +73,11 @@ son 5 maç için ayrı ayrı gösterilir.
 | Puan tablosu  | Sıralama, oynanan / galibiyet / beraberlik / mağlubiyet, averaj, puan, son 5 maç; Avrupa kupası ve küme düşme bölgeleri                    |
 | Takım analizi | Son 5 maç, galibiyet oranı, attığı ve yediği gol ortalamaları, iç saha / deplasman karşılaştırması, 2 grafik, yapay zekâ ile karşılaştırma |
 
+**Son güncelleme zamanı sezona özeldir:** yalnızca seçili lig ve sezonun son başarılı (veya kısmi)
+güncellemesi gösterilir; başka bir sezonun güncellemesi bu bilgiyi değiştirmez. O sezon için
+başarılı güncelleme yoksa API `last_sync: null` döner ve ekranda "Bu sezon için henüz başarılı
+güncelleme yok" yazar. Başarısız veya atlanan denemeler veri değiştirmediği için sayılmaz.
+
 Telefon ve bilgisayarda düzgün görünür (responsive). Bütün ekranlar gerçek veriyle, backend API'den
 çalışır; örnek veri yoktur.
 

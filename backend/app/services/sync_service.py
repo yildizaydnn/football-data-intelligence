@@ -145,9 +145,11 @@ class SyncService:
         logger.info("Sync %s bitti: %s", run.id, run.status)
         return run
 
-    def get_state(self, recent: int = 10, league_id: int | None = None) -> SyncState:
-        """Çalışan sync (kilit tüm ligler için ortak) + son işlemler (lig verilirse o lig)."""
-        history = self.sync_runs.list_recent(recent, self._external_league(league_id))
+    def get_state(
+        self, recent: int = 10, league_id: int | None = None, season: int | None = None
+    ) -> SyncState:
+        """Çalışan sync (kilit tüm ligler için ortak) + son işlemler (lig/sezona göre)."""
+        history = self.sync_runs.list_recent(recent, self._external_league(league_id), season)
         return SyncState(self.sync_runs.get_running(), history, self._schedule())
 
     def run_manual(self, league_id: int | None = None, season: int | None = None) -> SyncRun:

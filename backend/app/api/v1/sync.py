@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import SyncServiceDep, SyncStatusServiceDep, require_sync_token
 from app.api.v1.common import SeasonQuery, error_responses
@@ -50,9 +52,15 @@ def trigger_scheduled_sync(service: SyncServiceDep) -> ScheduledSyncOut:
 
 
 @router.get("/status", response_model=SyncStateOut, responses=error_responses(404))
-def get_sync_status(service: SyncStatusServiceDep, league_id: int | None = None) -> SyncStateOut:
-    """Çalışan sync ve son işlemler; `league_id` verilirse geçmiş o lige göre süzülür."""
-    return SyncStateOut.model_validate(service.get_state(league_id=league_id))
+def get_sync_status(
+    service: SyncStatusServiceDep,
+    league_id: int | None = None,
+    season: Annotated[
+        int | None, Query(ge=1900, le=2100, description="Sezon yılı; boşsa bütün sezonlar")
+    ] = None,
+) -> SyncStateOut:
+    """Çalışan sync ve son işlemler; `league_id`/`season` verilirse geçmiş onlara göre süzülür."""
+    return SyncStateOut.model_validate(service.get_state(league_id=league_id, season=season))
 
 
 @router.get("/usage", response_model=SyncUsageOut, responses=error_responses(404))

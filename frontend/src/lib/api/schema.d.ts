@@ -253,7 +253,7 @@ export interface paths {
         };
         /**
          * Get Sync Status
-         * @description Çalışan sync ve son işlemler; `league_id` verilirse geçmiş o lige göre süzülür.
+         * @description Çalışan sync ve son işlemler; `league_id`/`season` verilirse geçmiş onlara göre süzülür.
          */
         get: operations["get_sync_status"];
         put?: never;
@@ -1523,6 +1523,8 @@ export interface operations {
         parameters: {
             query?: {
                 league_id?: number | null;
+                /** @description Sezon yılı; boşsa bütün sezonlar */
+                season?: number | null;
             };
             header?: never;
             path?: never;

@@ -19,18 +19,18 @@ export const syncUsageQuery = (leagueId: number, season?: number) =>
     staleTime: 15_000,
   });
 
-/** Çalışan sync + son işlemler. `leagueId` verilirse geçmiş o lige göre süzülür. */
-export const syncStatusQuery = (leagueId?: number) =>
+/** Çalışan sync + son işlemler. `leagueId` / `season` verilirse geçmiş onlara göre süzülür. */
+export const syncStatusQuery = (leagueId?: number, season?: number) =>
   queryOptions({
-    queryKey: ["sync", "status", leagueId ?? "all"],
-    queryFn: () => endpoints.syncStatus(leagueId),
+    queryKey: ["sync", "status", leagueId ?? "all", season ?? "all"],
+    queryFn: () => endpoints.syncStatus(leagueId, season),
     staleTime: 15_000,
   });
 
 export const useSyncUsage = (leagueId: number, season?: number) =>
   useSuspenseQuery(syncUsageQuery(leagueId, season)).data;
-export const useSyncStatus = (leagueId?: number) =>
-  useSuspenseQuery(syncStatusQuery(leagueId)).data;
+export const useSyncStatus = (leagueId?: number, season?: number) =>
+  useSuspenseQuery(syncStatusQuery(leagueId, season)).data;
 
 /** Elle güncelleme: ekranda görüntülenen lig ve sezon için. Bitince tüm ekranlar tazelenir. */
 export function useTriggerSync(leagueId: number, season?: number) {

@@ -484,3 +484,21 @@ def test_sync_history_can_be_filtered_by_league(
 
     assert {r["league_external_id"] for r in everything} == {203, 39}
     assert {r["league_external_id"] for r in only_this} == {203}
+
+
+def test_sync_history_can_be_filtered_by_season(
+    client: TestClient, db_session: Session, league_id: int
+) -> None:
+    # Bir sezonun başarısız güncellemesi diğer sezonun ekranında uyarı olarak görünmemeli.
+    from app.core.enums import SyncStatus, SyncTrigger
+    from app.repositories.sync_repository import SyncRunRepository
+
+    failed = SyncRunRepository(db_session).try_start(SyncTrigger.MANUAL, 203, 2023)
+    SyncRunRepository(db_session).finish(failed, SyncStatus.FAILED, error_message="HTTP 500")
+
+    def history(season: int) -> list[dict]:
+        params = {"league_id": league_id, "season": season}
+        return client.get("/api/v1/sync/status", params=params).json()["recent"]
+
+    assert [r["status"] for r in history(2023)] == ["failed"]
+    assert {r["season"] for r in history(2024)} == {2024}

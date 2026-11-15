@@ -122,7 +122,9 @@ export function Hero({ compact }: { compact: boolean }) {
             <p className="mt-3 text-sm text-chalk/90">
               Son senkronizasyon:{" "}
               <b className="font-semibold text-white">
-                {overview.last_sync ? formatDateTime(overview.last_sync.started_at) : "henüz yok"}
+                {overview.last_sync
+                  ? formatDateTime(overview.last_sync.finished_at ?? overview.last_sync.started_at)
+                  : "bu sezon için henüz yok"}
               </b>
               {" · "}
               {schedule.enabled && schedule.next_run_at
