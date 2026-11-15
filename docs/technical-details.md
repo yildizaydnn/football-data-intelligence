@@ -254,7 +254,7 @@ Takım analizi sayfasında iki takım seçilir; kısa, Türkçe, veriye dayalı 
 ## Testler ve CI
 
 ```bash
-make test     # backend: 264 test
+make test     # backend: 270 test
 make lint     # ruff + eslint + TypeScript
 ```
 
