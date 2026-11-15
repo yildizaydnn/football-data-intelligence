@@ -73,8 +73,8 @@ function RunItem({ run, delay }: { run: SyncRun; delay: number }) {
         {run.season && <p className="text-xs text-mist">{formatSeason(run.season)} sezonu</p>}
         <p
           className="mt-1 text-sm text-sage"
-          // Teknik ayrıntı (ör. HTTP 429) isteyen için fareyle üzerine gelince
-          title={run.status === "failed" ? (run.error_message ?? undefined) : undefined}
+          // Teknik ayrıntı (ör. HTTP 429, atlanan kaydın nedeni) isteyen için fareyle üzerine gelince
+          title={run.status === "failed" || run.status === "partial" ? (run.error_message ?? undefined) : undefined}
         >
           {describeRun(run)}
         </p>

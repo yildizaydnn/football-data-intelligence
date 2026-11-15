@@ -49,6 +49,36 @@ def test_clean_data_gives_success(service: SyncService, provider: FakeProvider) 
     assert run.error_message is None
 
 
+def test_malformed_fixture_is_skipped_and_valid_one_is_saved(
+    service: SyncService, provider: FakeProvider, db_session: Session
+) -> None:
+    # Bir geçerli + bir bozuk (goals: null) kayıt: geçerli kaydedilir, bozuk nedeniyle atlanır.
+    valid, broken = provider.fixture(1001), provider.fixture(1002)
+    broken["goals"] = None
+    provider.fixtures = [valid, broken]
+
+    run = service.run(SyncTrigger.MANUAL)
+
+    assert run.status is SyncStatus.PARTIAL
+    assert run.skipped == 1
+    assert "FixtureDTO #1002" in run.error_message and "goals" in run.error_message
+    assert [f.external_id for f in db_session.query(Fixture)] == [1001]
+
+
+def test_malformed_update_keeps_last_known_fixture(
+    service: SyncService, provider: FakeProvider, db_session: Session
+) -> None:
+    # Daha önce kaydedilmiş maç bozuk gelirse silinmez ve skoru ezilmez; son doğru hali kalır.
+    service.run(SyncTrigger.INITIAL)
+    provider.fixture(1001)["goals"] = None
+
+    run = service.run(SyncTrigger.MANUAL)
+
+    assert run.status is SyncStatus.PARTIAL
+    stored = db_session.query(Fixture).filter_by(external_id=1001).one()
+    assert (stored.home_goals, stored.away_goals) == (1, 3)
+
+
 def test_second_sync_updates_changed_fixture(
     service: SyncService, provider: FakeProvider, db_session: Session
 ) -> None:

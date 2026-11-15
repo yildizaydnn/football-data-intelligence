@@ -42,7 +42,7 @@ Case dokümanının bölüm sırasıyla.
 | İstekler sunucudan atılmalı                                                  | Tarayıcı veri kaynağıyla hiç konuşmaz; yalnızca bizim sunucumuzla (backend API) konuşur                                                       |
 | API anahtarı güvende olmalı                                                  | Anahtar yalnızca sunucudaki gizli ayar dosyasında (`.env`, ortam değişkeni). Kodda, GitHub'da ve tarayıcıda yok                               |
 | Veri çekme tekrar çalıştırılabilmeli                                         | Güncelleme istendiği kadar tekrarlanabilir; aynı veri ikinci kez gelince kopya oluşmaz (idempotent sync)                                      |
-| Eksik veri ve hatalar ele alınmalı                                           | Bilgisi eksik tek bir maç bütün güncellemeyi bozmaz: o maç atlanır ve not edilir, gerisi kaydedilir (güncelleme `partial` olarak işaretlenir) |
+| Eksik veri ve hatalar ele alınmalı                                           | Bilgisi eksik ya da biçimi bozuk (ör. `goals: null`) tek bir maç bütün güncellemeyi bozmaz: o maç atlanır, gerisi kaydedilir. Güncelleme `partial` olarak işaretlenir; atlanan maçın numarası ve nedeni güncelleme kaydında ve logda görünür. Daha önce kaydedilmiş hali silinmez |
 
 ### 3. Veritabanı
 

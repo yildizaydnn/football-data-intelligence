@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
@@ -6,11 +7,13 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import Settings
-from app.core.exceptions import ProviderError
 from app.providers.api_football.client import ApiFootballClient, ApiResult
 from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamStatisticsDTO
 from app.providers.api_football.rate_limiter import shared_rate_limiter
-from app.providers.base import ProviderResponse
+from app.providers.base import ProviderResponse, RejectedItem
+
+logger = logging.getLogger(__name__)
+MAX_REASON_ERRORS = 3
 
 
 class ApiFootballProvider:
@@ -52,14 +55,45 @@ class ApiFootballProvider:
 
 
 def _to_response[T: BaseModel](result: ApiResult, dto: type[T]) -> ProviderResponse[T]:
-    try:
-        data = [dto.model_validate(item) for item in result.response]
-    except ValidationError as exc:
-        raise ProviderError(
-            f"API-Football {dto.__name__} yanıtı beklenen biçimde değil: {exc.error_count()} hata",
-            requests_made=result.requests_made,
-        ) from exc
-    return ProviderResponse(data, result.requests_remaining, result.requests_made)
+    data, rejected = parse_items(dto, result.response)
+    return ProviderResponse(data, result.requests_remaining, result.requests_made, rejected)
+
+
+def parse_items[T: BaseModel](dto: type[T], raw: list[Any]) -> tuple[list[T], list[RejectedItem]]:
+    """Kayıtları tek tek doğrular: biçimi bozuk kayıt nedeniyle ayrılır, gerisi işlenir.
+
+    Tek bir bozuk kayıt (ör. `goals: null`) bütün yanıtı, dolayısıyla bütün sync'i düşürmemeli.
+    """
+    items: list[T] = []
+    rejected: list[RejectedItem] = []
+    for index, item in enumerate(raw):
+        try:
+            items.append(dto.model_validate(item))
+        except ValidationError as exc:
+            reason = "beklenmeyen biçim: " + "; ".join(
+                f"{'.'.join(map(str, e['loc'])) or 'kayıt'}: {e['msg']}"
+                for e in exc.errors()[:MAX_REASON_ERRORS]
+            )
+            external_id = _external_id(item)
+            logger.warning(
+                "%s: kayıt atlandı (index=%d, external_id=%s): %s",
+                dto.__name__,
+                index,
+                external_id,
+                reason,
+            )
+            rejected.append(RejectedItem(dto.__name__, index, reason, external_id))
+    return items, rejected
+
+
+def _external_id(item: Any) -> int | None:
+    """Bozuk kaydı loglarda tanımak için ham veriden id (fixture/team/league.id)."""
+    if isinstance(item, dict):
+        for key in ("fixture", "team", "league"):
+            value = item.get(key)
+            if isinstance(value, dict) and isinstance(value.get("id"), int):
+                return value["id"]
+    return None
 
 
 @contextmanager

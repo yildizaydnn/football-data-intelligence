@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Protocol
 
@@ -6,10 +6,21 @@ from app.providers.api_football.dto import FixtureDTO, LeagueDTO, TeamDTO, TeamS
 
 
 @dataclass(frozen=True)
+class RejectedItem:
+    """Yanıttaki biçimi bozuk kayıt (ör. `goals: null`); atlanır, gerisi işlenmeye devam eder."""
+
+    record: str  # DTO adı, ör. "FixtureDTO"
+    index: int  # ham yanıttaki sırası
+    reason: str
+    external_id: int | None = None
+
+
+@dataclass(frozen=True)
 class ProviderResponse[T]:
     data: list[T]
     requests_remaining: int | None  # header'dan okunan günlük kalan kota
     requests_made: int = 1  # retry'lar dahil gerçekten atılan istek sayısı (kotadan düşer)
+    rejected: list[RejectedItem] = field(default_factory=list)
 
 
 class FootballDataProvider(Protocol):
